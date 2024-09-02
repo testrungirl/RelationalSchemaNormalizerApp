@@ -36,11 +36,12 @@
             // 
             // panel1
             // 
+            panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             panel1.Controls.Add(createBtn);
             panel1.Controls.Add(homeBtn);
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
-            panel1.Size = new Size(135, 1023);
+            panel1.Size = new Size(135, 1127);
             panel1.TabIndex = 0;
             // 
             // createBtn
@@ -54,9 +55,10 @@
             // 
             // homeBtn
             // 
-            homeBtn.Location = new Point(12, 274);
+            homeBtn.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            homeBtn.Location = new Point(12, 248);
             homeBtn.Name = "homeBtn";
-            homeBtn.Size = new Size(112, 34);
+            homeBtn.Size = new Size(107, 63);
             homeBtn.TabIndex = 1;
             homeBtn.Text = "Home";
             homeBtn.UseVisualStyleBackColor = true;
