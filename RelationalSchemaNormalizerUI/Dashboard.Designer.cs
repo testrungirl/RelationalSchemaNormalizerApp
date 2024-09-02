@@ -28,12 +28,56 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            panel1 = new Panel();
+            createBtn = new Button();
+            homeBtn = new Button();
+            panel1.SuspendLayout();
+            SuspendLayout();
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(createBtn);
+            panel1.Controls.Add(homeBtn);
+            panel1.Location = new Point(0, 0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(135, 1023);
+            panel1.TabIndex = 0;
+            // 
+            // createBtn
+            // 
+            createBtn.Location = new Point(12, 352);
+            createBtn.Name = "createBtn";
+            createBtn.Size = new Size(107, 69);
+            createBtn.TabIndex = 2;
+            createBtn.Text = "Create Table";
+            createBtn.UseVisualStyleBackColor = true;
+            // 
+            // homeBtn
+            // 
+            homeBtn.Location = new Point(12, 274);
+            homeBtn.Name = "homeBtn";
+            homeBtn.Size = new Size(112, 34);
+            homeBtn.TabIndex = 1;
+            homeBtn.Text = "Home";
+            homeBtn.UseVisualStyleBackColor = true;
+            // 
+            // Dashboard
+            // 
+            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.MenuHighlight;
+            ClientSize = new Size(2182, 1128);
+            Controls.Add(panel1);
+            Name = "Dashboard";
+            Text = "Dashboard";
+            panel1.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion
+
+        private Panel panel1;
+        private Button createBtn;
+        private Button homeBtn;
     }
 }

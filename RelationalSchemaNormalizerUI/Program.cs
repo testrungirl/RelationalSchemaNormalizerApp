@@ -28,7 +28,7 @@ namespace RelationalSchemaNormalizerUI
                 .ConfigureServices((context, services) =>
                 {
                     services.AddTransient<Dashboard>();
-                    
+
                     services.AddDbContext<AppContext>(options =>
                 options.UseSqlServer(context.Configuration.GetConnectionString("AppDatabase"), b => b.MigrationsAssembly("RelationalSchemaNormalizerUI")));
 
