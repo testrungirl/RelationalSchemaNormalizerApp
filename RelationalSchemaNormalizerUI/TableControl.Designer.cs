@@ -51,12 +51,12 @@
             label1.Anchor = AnchorStyles.Right;
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(784, 29);
+            label1.Location = new Point(776, 29);
             label1.Margin = new Padding(3, 7, 3, 0);
             label1.Name = "label1";
-            label1.Size = new Size(86, 38);
+            label1.Size = new Size(94, 38);
             label1.TabIndex = 1;
-            label1.Text = "Table";
+            label1.Text = "Table:";
             // 
             // tableLayoutPanel1
             // 

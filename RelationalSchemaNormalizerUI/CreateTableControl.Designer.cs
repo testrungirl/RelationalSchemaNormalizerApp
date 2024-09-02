@@ -47,7 +47,7 @@
             label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(860, 108);
+            label1.Location = new Point(821, 47);
             label1.Name = "label1";
             label1.Size = new Size(245, 38);
             label1.TabIndex = 0;
@@ -92,7 +92,7 @@
             // 
             label2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label2.AutoSize = true;
-            label2.Location = new Point(335, 166);
+            label2.Location = new Point(226, 160);
             label2.Name = "label2";
             label2.Size = new Size(113, 25);
             label2.TabIndex = 2;
@@ -101,7 +101,7 @@
             // tableName
             // 
             tableName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            tableName.Location = new Point(484, 160);
+            tableName.Location = new Point(419, 154);
             tableName.Name = "tableName";
             tableName.Size = new Size(324, 31);
             tableName.TabIndex = 3;
