@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RelationalSchemaNormalizerLibrary.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,13 +13,16 @@ namespace RelationalSchemaNormalizerUI
 {
     public partial class HomeControl : UserControl
     {
-        public HomeControl()
+        private readonly IAppDBService _appDbService;
+        public HomeControl(IAppDBService appDbService)
         {
-            InitializeComponent();
+            InitializeComponent(appDbService);
+
+            _appDbService = appDbService;
         }
-        public void ShowTableDetails(string databaseName, string tableName)
+        public void ShowTableDetails(string tableName)
         {
-            //tableControl1.Initialize(databaseName, tableName);
+            tableControl1.Initialize(tableName);
             tableControl1.Visible = true;
             tableControl1.BringToFront();
 

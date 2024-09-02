@@ -17,7 +17,7 @@ namespace RelationalSchemaNormalizerUI
         {
             createTableControl1.Hide();
             homeControl1.Show();
-            //homeControl1.ShowHomeView();
+            homeControl1.ShowHomeView();
             homeControl1.BringToFront();
         }
 
