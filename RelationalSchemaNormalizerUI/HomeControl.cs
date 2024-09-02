@@ -1,22 +1,15 @@
 ﻿using RelationalSchemaNormalizerLibrary.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace RelationalSchemaNormalizerUI
 {
     public partial class HomeControl : UserControl
     {
         private readonly IAppDBService _appDbService;
-        public HomeControl(IAppDBService appDbService)
+        private readonly IDynamicDBService _dynamicDBService;
+        private readonly INormalizerService _normalizerService;
+        public HomeControl(IAppDBService appDbService, IDynamicDBService dynamicDBService, INormalizerService normalizerService)
         {
-            InitializeComponent(appDbService);
+            InitializeComponent(appDbService, dynamicDBService, normalizerService);
 
             _appDbService = appDbService;
         }

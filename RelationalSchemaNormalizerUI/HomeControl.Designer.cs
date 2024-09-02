@@ -1,4 +1,5 @@
 ﻿using RelationalSchemaNormalizerLibrary.Interfaces;
+using RelationalSchemaNormalizerLibrary.Services;
 
 namespace RelationalSchemaNormalizerUI
 {
@@ -28,10 +29,10 @@ namespace RelationalSchemaNormalizerUI
         /// Required method for Designer support - do not modify 
         /// the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent(IAppDBService appDbService)
+        private void InitializeComponent(IAppDBService appDBService, IDynamicDBService dynamicDBService, INormalizerService normalizerService)
         {
-            tableControl1 = new TableControl();
-            tablesControl1 = new TablesControl(appDbService);
+            tableControl1 = new TableControl(dynamicDBService, normalizerService, appDBService);
+            tablesControl1 = new TablesControl(appDBService);
             SuspendLayout();
             // 
             // tableControl1

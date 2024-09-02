@@ -29,7 +29,7 @@ namespace RelationalSchemaNormalizerUI
                 string input = e.FormattedValue.ToString();
                 if (!System.Text.RegularExpressions.Regex.IsMatch(input, @"^[a-zA-Z0-9]+$"))
                 {
-                    MessageBox.Show("Only alphanumeric characters are allowed without spaces.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ShowStatus("Only alphanumeric characters are allowed without spaces.", "Invalid Input");
                     e.Cancel = true;
                 }
             }
@@ -40,7 +40,7 @@ namespace RelationalSchemaNormalizerUI
 
                 if (!validTypes.Contains(input))
                 {
-                    MessageBox.Show("Invalid data type. Please select from: string, boolean, char, datetime, double, float, guid, int.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ShowStatus("Invalid data type. Please select from: string, boolean, char, datetime, double, float, guid, int.", "Invalid Input");
                     e.Cancel = true;
                 }
             }
@@ -49,7 +49,7 @@ namespace RelationalSchemaNormalizerUI
                 string input = e.FormattedValue.ToString().ToLower();
                 if (input != "true" && input != "false")
                 {
-                    MessageBox.Show("Only 'true' or 'false' are allowed.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ShowStatus("Only 'true' or 'false' are allowed.", "Invalid Input");
                     e.Cancel = true;
                 }
             }
@@ -132,7 +132,7 @@ namespace RelationalSchemaNormalizerUI
         {
             if (!string.IsNullOrWhiteSpace(tableName.Text) && !System.Text.RegularExpressions.Regex.IsMatch(tableName.Text, @"^[a-zA-Z0-9]+$"))
             {
-                MessageBox.Show("Table name must contain only alphanumeric characters without spaces or special characters.", "Invalid Table Name", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowStatus("Table name must contain only alphanumeric characters without spaces or special characters.", "Invalid Table Name");
 
                 tableName.Focus();
             }
@@ -146,14 +146,14 @@ namespace RelationalSchemaNormalizerUI
             // Validate the table name
             if (string.IsNullOrWhiteSpace(tableName.Text))
             {
-                ShowValidationError("Table name must be populated.");
+                ShowStatus("Table name must be populated.");
                 return;
             }
 
             // Check if the DataGridView has any populated rows
             if (dataGridView1.Rows.Cast<DataGridViewRow>().All(row => row.IsNewRow))
             {
-                ShowValidationError("The table must contain at least one row with data.");
+                ShowStatus("The table must contain at least one row with data.");
                 return;
             }
 
@@ -173,7 +173,7 @@ namespace RelationalSchemaNormalizerUI
                 // Ensure all cells in the row are populated
                 if (row.Cells.Cast<DataGridViewCell>().Any(cell => string.IsNullOrWhiteSpace(cell.Value?.ToString())))
                 {
-                    ShowValidationError("All cells in each row must be populated.");
+                    ShowStatus("All cells in each row must be populated.");
                     return;
                 }
 
@@ -184,7 +184,7 @@ namespace RelationalSchemaNormalizerUI
                 // Check for duplicate attribute names
                 if (!attributeNames.Add(attributeName))
                 {
-                    ShowValidationError($"The attribute name '{attributeName}' is duplicated. Please ensure all attribute names are unique.");
+                    ShowStatus($"The attribute name '{attributeName}' is duplicated. Please ensure all attribute names are unique.");
                     return;
                 }
 
@@ -199,12 +199,12 @@ namespace RelationalSchemaNormalizerUI
 
             if (!attributeDetails.Any(x => x.KeyAttribute))
             {
-                ShowValidationError($"Table: {tableDetail.TableName} has no primary key defined.");
+                ShowStatus($"Table: {tableDetail.TableName} has no primary key defined.");
                 return;
             }
-            if(attributeDetails.Count < 3)
+            if (attributeDetails.Count < 3)
             {
-                ShowValidationError($"The minimum number of atrributes to add is 3");
+                ShowStatus($"The minimum number of atrributes to add is 3");
             }
             // Check if the table already exists in the database
             var tableExists = await _appDBService.TableExistsInDB(tableDetail.TableName, _databaseName);
@@ -242,14 +242,8 @@ namespace RelationalSchemaNormalizerUI
             tableName.Text = "";
         }
 
-        // Helper method for showing validation errors
-        private void ShowValidationError(string message)
-        {
-            MessageBox.Show(message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-
         // Helper method for showing errors
-        private void ShowStatus(string message, string caption, MessageBoxIcon icon = MessageBoxIcon.Error)
+        private void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
         {
             MessageBox.Show(message, caption, MessageBoxButtons.OK, icon);
         }

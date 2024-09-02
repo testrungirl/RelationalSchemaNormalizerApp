@@ -29,13 +29,13 @@ namespace RelationalSchemaNormalizerUI
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent(IAppDBService appDBService, IDynamicDBService dynamicDBService)
+        private void InitializeComponent(IAppDBService appDBService, IDynamicDBService dynamicDBService, INormalizerService normalizerService)
         {
             panel1 = new Panel();
             createBtn = new Button();
             homeBtn = new Button();
             createTableControl1 = new CreateTableControl(appDBService, dynamicDBService);
-            homeControl1 = new HomeControl(appDBService);
+            homeControl1 = new HomeControl(appDBService, dynamicDBService, normalizerService);
             panel1.SuspendLayout();
             SuspendLayout();
             // 
