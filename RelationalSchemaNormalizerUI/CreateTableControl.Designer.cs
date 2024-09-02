@@ -66,27 +66,27 @@
             dataGridView1.RowHeadersWidth = 62;
             dataGridView1.Size = new Size(1749, 673);
             dataGridView1.TabIndex = 1;
+            dataGridView1.CellValidating += dataGridView1_CellValidating;
+            dataGridView1.EditingControlShowing += dataGridView1_EditingControlShowing;
+            dataGridView1.RowValidating += dataGridView1_RowValidating;
             // 
             // Column1
             // 
             Column1.HeaderText = "Attribute";
             Column1.MinimumWidth = 8;
             Column1.Name = "Column1";
-            Column1.ReadOnly = true;
             // 
             // Column2
             // 
             Column2.HeaderText = "Data Type";
             Column2.MinimumWidth = 8;
             Column2.Name = "Column2";
-            Column2.ReadOnly = true;
             // 
             // Column3
             // 
             Column3.HeaderText = "Key Atrribute";
             Column3.MinimumWidth = 8;
             Column3.Name = "Column3";
-            Column3.ReadOnly = true;
             // 
             // label2
             // 
@@ -103,8 +103,9 @@
             tableName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             tableName.Location = new Point(419, 154);
             tableName.Name = "tableName";
-            tableName.Size = new Size(324, 31);
+            tableName.Size = new Size(537, 31);
             tableName.TabIndex = 3;
+            tableName.Validating += tableName_Validating;
             // 
             // createTableBtn
             // 
@@ -112,12 +113,13 @@
             createTableBtn.AutoSize = true;
             createTableBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             createTableBtn.BackColor = Color.CornflowerBlue;
-            createTableBtn.Location = new Point(1875, 937);
+            createTableBtn.Location = new Point(1754, 937);
             createTableBtn.Name = "createTableBtn";
-            createTableBtn.Size = new Size(117, 35);
+            createTableBtn.Size = new Size(238, 35);
             createTableBtn.TabIndex = 4;
-            createTableBtn.Text = "Create Table";
+            createTableBtn.Text = "Create Table with Atrributes";
             createTableBtn.UseVisualStyleBackColor = false;
+            createTableBtn.Click += createTableBtn_Click;
             // 
             // StatusStrip1
             // 
@@ -162,13 +164,13 @@
 
         private Label label1;
         private DataGridView dataGridView1;
-        private DataGridViewTextBoxColumn Column1;
-        private DataGridViewTextBoxColumn Column2;
-        private DataGridViewTextBoxColumn Column3;
         private Label label2;
         private TextBox tableName;
         private Button createTableBtn;
         private StatusStrip StatusStrip1;
         private ToolStripStatusLabel systemStatus;
+        private DataGridViewTextBoxColumn Column1;
+        private DataGridViewTextBoxColumn Column2;
+        private DataGridViewTextBoxColumn Column3;
     }
 }

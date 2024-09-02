@@ -1,10 +1,16 @@
+using RelationalSchemaNormalizerLibrary.Interfaces;
+
 namespace RelationalSchemaNormalizerUI
 {
     public partial class Dashboard : Form
     {
-        public Dashboard()
+        private readonly IAppDBService _appDBService;
+        private readonly IDynamicDBService _dynamicDBService;
+        public Dashboard(IAppDBService appDBService, IDynamicDBService dynamicDBService)
         {
-            InitializeComponent();
+            InitializeComponent(appDBService, dynamicDBService);
+            _appDBService = appDBService;
+            _dynamicDBService = dynamicDBService;
         }
 
         private void homeBtn_Click(object sender, EventArgs e)
@@ -17,6 +23,7 @@ namespace RelationalSchemaNormalizerUI
 
         private void createBtn_Click(object sender, EventArgs e)
         {
+
             createTableControl1.Show();
             homeControl1.Hide();
             createTableControl1.BringToFront();
