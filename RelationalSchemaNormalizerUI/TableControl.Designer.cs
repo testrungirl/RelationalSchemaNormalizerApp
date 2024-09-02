@@ -35,7 +35,7 @@
             recordsFromDB = new DataGridView();
             tableLayoutPanel2 = new TableLayoutPanel();
             functDepText = new TextBox();
-            button2 = new Button();
+            funcDepenBtn = new Button();
             twoNFBtn = new Button();
             threeNFBtn = new Button();
             statusStrip1 = new StatusStrip();
@@ -147,18 +147,19 @@
             functDepText.TabIndex = 4;
             functDepText.Visible = false;
             // 
-            // button2
+            // funcDepenBtn
             // 
-            button2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            button2.AutoSize = true;
-            button2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            button2.BackColor = Color.CornflowerBlue;
-            button2.Location = new Point(1787, 978);
-            button2.Name = "button2";
-            button2.Size = new Size(271, 35);
-            button2.TabIndex = 4;
-            button2.Text = "Check Functional Dependencies";
-            button2.UseVisualStyleBackColor = false;
+            funcDepenBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            funcDepenBtn.AutoSize = true;
+            funcDepenBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            funcDepenBtn.BackColor = Color.CornflowerBlue;
+            funcDepenBtn.Location = new Point(1787, 978);
+            funcDepenBtn.Name = "funcDepenBtn";
+            funcDepenBtn.Size = new Size(271, 35);
+            funcDepenBtn.TabIndex = 4;
+            funcDepenBtn.Text = "Check Functional Dependencies";
+            funcDepenBtn.UseVisualStyleBackColor = false;
+            funcDepenBtn.Click += funcDepenBtn_Click;
             // 
             // twoNFBtn
             // 
@@ -220,7 +221,7 @@
             Controls.Add(threeNFBtn);
             Controls.Add(twoNFBtn);
             Controls.Add(tableLayoutPanel2);
-            Controls.Add(button2);
+            Controls.Add(funcDepenBtn);
             Controls.Add(tableLayoutPanel1);
             Name = "TableControl";
             Size = new Size(2099, 1091);
@@ -243,7 +244,7 @@
         private Label tableName;
         private DataGridView recordsFromDB;
         private TableLayoutPanel tableLayoutPanel2;
-        private Button button2;
+        private Button funcDepenBtn;
         private TextBox functDepText;
         private Button twoNFBtn;
         private Button threeNFBtn;
