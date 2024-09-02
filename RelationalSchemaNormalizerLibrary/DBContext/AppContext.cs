@@ -27,10 +27,9 @@ namespace RelationalSchemaNormalizerLibrary.Models
                 .WithMany(t => t.GeneratedTables)
                 .HasForeignKey(g => g.TableDetailId);
 
-            // Setting Comments to have a default value
-            //modelBuilder.Entity<TableDetail>()
-            //    .Property(t => t.Comments)
-            //    .HasDefaultValue(string.Empty);
+            modelBuilder.Entity<TableDetail>()
+                .Property(t => t.Comments)
+                .HasDefaultValue(string.Empty);
         }
     }
 }
