@@ -31,8 +31,8 @@
             label1 = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             tableName = new Label();
-            addRecords = new Button();
-            dataGridView1 = new DataGridView();
+            addRecordFromFileBtn = new Button();
+            recordsFromDB = new DataGridView();
             tableLayoutPanel2 = new TableLayoutPanel();
             functDepText = new TextBox();
             button2 = new Button();
@@ -41,7 +41,7 @@
             statusStrip1 = new StatusStrip();
             systemStatus = new ToolStripStatusLabel();
             tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)recordsFromDB).BeginInit();
             tableLayoutPanel2.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -68,7 +68,7 @@
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 49.1851F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 251F));
             tableLayoutPanel1.Controls.Add(tableName, 1, 0);
-            tableLayoutPanel1.Controls.Add(addRecords, 2, 0);
+            tableLayoutPanel1.Controls.Add(addRecordFromFileBtn, 2, 0);
             tableLayoutPanel1.Controls.Add(label1, 0, 0);
             tableLayoutPanel1.Location = new Point(60, 19);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -89,40 +89,41 @@
             tableName.TabIndex = 3;
             tableName.Text = "Table Name";
             // 
-            // addRecords
+            // addRecordFromFileBtn
             // 
-            addRecords.Anchor = AnchorStyles.None;
-            addRecords.AutoSize = true;
-            addRecords.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            addRecords.BackColor = Color.CornflowerBlue;
-            addRecords.Location = new Point(1744, 27);
-            addRecords.Name = "addRecords";
-            addRecords.Size = new Size(199, 35);
-            addRecords.TabIndex = 2;
-            addRecords.Text = "Bulk Upload from CSV";
-            addRecords.UseVisualStyleBackColor = false;
+            addRecordFromFileBtn.Anchor = AnchorStyles.None;
+            addRecordFromFileBtn.AutoSize = true;
+            addRecordFromFileBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            addRecordFromFileBtn.BackColor = Color.CornflowerBlue;
+            addRecordFromFileBtn.Location = new Point(1744, 27);
+            addRecordFromFileBtn.Name = "addRecordFromFileBtn";
+            addRecordFromFileBtn.Size = new Size(199, 35);
+            addRecordFromFileBtn.TabIndex = 2;
+            addRecordFromFileBtn.Text = "Bulk Upload from CSV";
+            addRecordFromFileBtn.UseVisualStyleBackColor = false;
+            addRecordFromFileBtn.Click += addRecordFromFileBtn_Click;
             // 
-            // dataGridView1
+            // recordsFromDB
             // 
-            dataGridView1.AllowUserToAddRows = false;
-            dataGridView1.AllowUserToDeleteRows = false;
-            dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            dataGridView1.BackgroundColor = SystemColors.ButtonHighlight;
-            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.GridColor = SystemColors.ButtonFace;
-            dataGridView1.Location = new Point(3, 3);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.ReadOnly = true;
-            dataGridView1.RowHeadersWidth = 62;
-            dataGridView1.Size = new Size(1964, 629);
-            dataGridView1.TabIndex = 3;
+            recordsFromDB.AllowUserToAddRows = false;
+            recordsFromDB.AllowUserToDeleteRows = false;
+            recordsFromDB.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            recordsFromDB.BackgroundColor = SystemColors.ButtonHighlight;
+            recordsFromDB.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            recordsFromDB.GridColor = SystemColors.ButtonFace;
+            recordsFromDB.Location = new Point(3, 3);
+            recordsFromDB.Name = "recordsFromDB";
+            recordsFromDB.ReadOnly = true;
+            recordsFromDB.RowHeadersWidth = 62;
+            recordsFromDB.Size = new Size(1964, 629);
+            recordsFromDB.TabIndex = 3;
             // 
             // tableLayoutPanel2
             // 
             tableLayoutPanel2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tableLayoutPanel2.ColumnCount = 1;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel2.Controls.Add(dataGridView1, 0, 0);
+            tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
             tableLayoutPanel2.Controls.Add(functDepText, 0, 1);
             tableLayoutPanel2.Location = new Point(60, 139);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
@@ -135,14 +136,14 @@
             // 
             // functDepText
             // 
-            functDepText.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            functDepText.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             functDepText.BackColor = SystemColors.GradientInactiveCaption;
-            functDepText.Location = new Point(3, 650);
+            functDepText.Location = new Point(3, 638);
             functDepText.Multiline = true;
             functDepText.Name = "functDepText";
             functDepText.ReadOnly = true;
             functDepText.ScrollBars = ScrollBars.Horizontal;
-            functDepText.Size = new Size(1964, 153);
+            functDepText.Size = new Size(1964, 165);
             functDepText.TabIndex = 4;
             functDepText.Visible = false;
             // 
@@ -225,7 +226,7 @@
             Size = new Size(2099, 1091);
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)recordsFromDB).EndInit();
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
             statusStrip1.ResumeLayout(false);
@@ -238,9 +239,9 @@
 
         private Label label1;
         private TableLayoutPanel tableLayoutPanel1;
-        private Button addRecords;
+        private Button addRecordFromFileBtn;
         private Label tableName;
-        private DataGridView dataGridView1;
+        private DataGridView recordsFromDB;
         private TableLayoutPanel tableLayoutPanel2;
         private Button button2;
         private TextBox functDepText;

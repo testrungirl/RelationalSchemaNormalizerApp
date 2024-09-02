@@ -46,6 +46,7 @@ namespace RelationalSchemaNormalizerUI
 
                     services.AddTransient<IAppDBService, AppDBService>();
                     services.AddTransient<IDynamicDBService, DynamicDBService>();
+                    services.AddTransient<INormalizerService, NormalizerService>();
                     services.AddDbContext<AppContext>(options =>
                 options.UseSqlServer(context.Configuration.GetConnectionString("AppDatabase"), b => b.MigrationsAssembly("RelationalSchemaNormalizerUI")));
 

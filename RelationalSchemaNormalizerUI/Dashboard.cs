@@ -6,11 +6,13 @@ namespace RelationalSchemaNormalizerUI
     {
         private readonly IAppDBService _appDBService;
         private readonly IDynamicDBService _dynamicDBService;
-        public Dashboard(IAppDBService appDBService, IDynamicDBService dynamicDBService)
+        private readonly INormalizerService _normalizerService;
+        public Dashboard(IAppDBService appDBService, IDynamicDBService dynamicDBService, INormalizerService normalizerService)
         {
-            InitializeComponent(appDBService, dynamicDBService);
+            InitializeComponent(appDBService, dynamicDBService, normalizerService);
             _appDBService = appDBService;
             _dynamicDBService = dynamicDBService;
+            _normalizerService = normalizerService;
         }
 
         private void homeBtn_Click(object sender, EventArgs e)
