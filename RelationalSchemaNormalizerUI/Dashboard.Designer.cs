@@ -35,7 +35,7 @@ namespace RelationalSchemaNormalizerUI
             createBtn = new Button();
             homeBtn = new Button();
             createTableControl1 = new CreateTableControl(appDBService, dynamicDBService);
-            homeControl1 = new HomeControl();
+            homeControl1 = new HomeControl(appDBService);
             panel1.SuspendLayout();
             SuspendLayout();
             // 

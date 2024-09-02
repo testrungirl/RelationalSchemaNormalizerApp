@@ -1,4 +1,6 @@
-﻿namespace RelationalSchemaNormalizerUI
+﻿using RelationalSchemaNormalizerLibrary.Interfaces;
+
+namespace RelationalSchemaNormalizerUI
 {
     partial class HomeControl
     {
@@ -26,10 +28,10 @@
         /// Required method for Designer support - do not modify 
         /// the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent()
+        private void InitializeComponent(IAppDBService appDbService)
         {
             tableControl1 = new TableControl();
-            tablesControl1 = new TablesControl();
+            tablesControl1 = new TablesControl(appDbService);
             SuspendLayout();
             // 
             // tableControl1
