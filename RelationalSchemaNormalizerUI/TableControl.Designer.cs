@@ -34,10 +34,10 @@
             addRecords = new Button();
             dataGridView1 = new DataGridView();
             tableLayoutPanel2 = new TableLayoutPanel();
+            functDepText = new TextBox();
             button2 = new Button();
             twoNFBtn = new Button();
             threeNFBtn = new Button();
-            functDepText = new TextBox();
             statusStrip1 = new StatusStrip();
             systemStatus = new ToolStripStatusLabel();
             tableLayoutPanel1.SuspendLayout();
@@ -60,6 +60,8 @@
             // 
             // tableLayoutPanel1
             // 
+            tableLayoutPanel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             tableLayoutPanel1.BackgroundImageLayout = ImageLayout.None;
             tableLayoutPanel1.ColumnCount = 3;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50.8149F));
@@ -90,10 +92,12 @@
             // addRecords
             // 
             addRecords.Anchor = AnchorStyles.None;
+            addRecords.AutoSize = true;
+            addRecords.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             addRecords.BackColor = Color.CornflowerBlue;
-            addRecords.Location = new Point(1727, 20);
+            addRecords.Location = new Point(1744, 27);
             addRecords.Name = "addRecords";
-            addRecords.Size = new Size(234, 49);
+            addRecords.Size = new Size(199, 35);
             addRecords.TabIndex = 2;
             addRecords.Text = "Bulk Upload from CSV";
             addRecords.UseVisualStyleBackColor = false;
@@ -129,41 +133,6 @@
             tableLayoutPanel2.Size = new Size(1970, 806);
             tableLayoutPanel2.TabIndex = 4;
             // 
-            // button2
-            // 
-            button2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            button2.BackColor = Color.CornflowerBlue;
-            button2.Location = new Point(1796, 951);
-            button2.Name = "button2";
-            button2.Size = new Size(234, 62);
-            button2.TabIndex = 4;
-            button2.Text = "Check Functional Dependencies";
-            button2.UseVisualStyleBackColor = false;
-            // 
-            // twoNFBtn
-            // 
-            twoNFBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            twoNFBtn.BackColor = Color.CornflowerBlue;
-            twoNFBtn.Location = new Point(1297, 951);
-            twoNFBtn.Name = "twoNFBtn";
-            twoNFBtn.Size = new Size(234, 62);
-            twoNFBtn.TabIndex = 5;
-            twoNFBtn.Text = "Conver to 2 NF";
-            twoNFBtn.UseVisualStyleBackColor = false;
-            twoNFBtn.Visible = false;
-            // 
-            // threeNFBtn
-            // 
-            threeNFBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            threeNFBtn.BackColor = Color.CornflowerBlue;
-            threeNFBtn.Location = new Point(1546, 951);
-            threeNFBtn.Name = "threeNFBtn";
-            threeNFBtn.Size = new Size(234, 62);
-            threeNFBtn.TabIndex = 6;
-            threeNFBtn.Text = "Convert to 3 NF";
-            threeNFBtn.UseVisualStyleBackColor = false;
-            threeNFBtn.Visible = false;
-            // 
             // functDepText
             // 
             functDepText.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
@@ -176,6 +145,47 @@
             functDepText.Size = new Size(1964, 153);
             functDepText.TabIndex = 4;
             functDepText.Visible = false;
+            // 
+            // button2
+            // 
+            button2.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            button2.AutoSize = true;
+            button2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            button2.BackColor = Color.CornflowerBlue;
+            button2.Location = new Point(1787, 978);
+            button2.Name = "button2";
+            button2.Size = new Size(271, 35);
+            button2.TabIndex = 4;
+            button2.Text = "Check Functional Dependencies";
+            button2.UseVisualStyleBackColor = false;
+            // 
+            // twoNFBtn
+            // 
+            twoNFBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            twoNFBtn.AutoSize = true;
+            twoNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            twoNFBtn.BackColor = Color.CornflowerBlue;
+            twoNFBtn.Location = new Point(1389, 978);
+            twoNFBtn.Name = "twoNFBtn";
+            twoNFBtn.Size = new Size(142, 35);
+            twoNFBtn.TabIndex = 5;
+            twoNFBtn.Text = "Conver to 2 NF";
+            twoNFBtn.UseVisualStyleBackColor = false;
+            twoNFBtn.Visible = false;
+            // 
+            // threeNFBtn
+            // 
+            threeNFBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            threeNFBtn.AutoSize = true;
+            threeNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            threeNFBtn.BackColor = Color.CornflowerBlue;
+            threeNFBtn.Location = new Point(1595, 978);
+            threeNFBtn.Name = "threeNFBtn";
+            threeNFBtn.Size = new Size(148, 35);
+            threeNFBtn.TabIndex = 6;
+            threeNFBtn.Text = "Convert to 3 NF";
+            threeNFBtn.UseVisualStyleBackColor = false;
+            threeNFBtn.Visible = false;
             // 
             // statusStrip1
             // 
@@ -202,6 +212,8 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSize = true;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
             Controls.Add(statusStrip1);
             Controls.Add(threeNFBtn);

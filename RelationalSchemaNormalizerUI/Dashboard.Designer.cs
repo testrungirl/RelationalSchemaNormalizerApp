@@ -37,6 +37,7 @@
             // panel1
             // 
             panel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            panel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             panel1.Controls.Add(createBtn);
             panel1.Controls.Add(homeBtn);
             panel1.Location = new Point(0, 0);
@@ -46,6 +47,7 @@
             // 
             // createBtn
             // 
+            createBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             createBtn.Location = new Point(12, 352);
             createBtn.Name = "createBtn";
             createBtn.Size = new Size(107, 69);
@@ -56,6 +58,7 @@
             // homeBtn
             // 
             homeBtn.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            homeBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             homeBtn.Location = new Point(12, 248);
             homeBtn.Name = "homeBtn";
             homeBtn.Size = new Size(107, 63);
@@ -67,6 +70,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.MenuHighlight;
             ClientSize = new Size(2182, 1128);
             Controls.Add(panel1);
