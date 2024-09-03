@@ -15,6 +15,7 @@
         public DatabaseDetail DatabaseDetail { get; set; }
         public List<AttributeDetail> AttributeDetails { get; set; } = [];
         public List<GeneratedTable> GeneratedTables { get; set; } = [];
+        public LevelOfNF LevelOfNF { get; set; }
 
         public string Comments { get; set; }
     }
@@ -25,8 +26,7 @@
         public List<AttributeDetail> AttributeDetails { get; set; } = [];
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
-        public bool Is2ndNF { get; set; }
-        public bool Is3rdNF { get; set; }
+        public LevelOfNF LevelOfNF { get; set; }
 
     }
     public class AttributeDetail
@@ -38,4 +38,11 @@
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
     }
+    public enum LevelOfNF
+    {
+        NotChecked,
+        First,
+        Second,
+        Third
+    } 
 }

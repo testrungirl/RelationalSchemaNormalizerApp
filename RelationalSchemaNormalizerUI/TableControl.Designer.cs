@@ -107,7 +107,7 @@
             // 
             recordsFromDB.AllowUserToAddRows = false;
             recordsFromDB.AllowUserToDeleteRows = false;
-            recordsFromDB.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            recordsFromDB.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             recordsFromDB.BackgroundColor = SystemColors.ButtonHighlight;
             recordsFromDB.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             recordsFromDB.GridColor = SystemColors.ButtonFace;
@@ -115,36 +115,36 @@
             recordsFromDB.Name = "recordsFromDB";
             recordsFromDB.ReadOnly = true;
             recordsFromDB.RowHeadersWidth = 62;
-            recordsFromDB.Size = new Size(1964, 629);
+            recordsFromDB.Size = new Size(1574, 827);
             recordsFromDB.TabIndex = 3;
             // 
             // tableLayoutPanel2
             // 
             tableLayoutPanel2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            tableLayoutPanel2.ColumnCount = 1;
+            tableLayoutPanel2.ColumnCount = 2;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 390F));
+            tableLayoutPanel2.Controls.Add(functDepText, 1, 0);
             tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
-            tableLayoutPanel2.Controls.Add(functDepText, 0, 1);
             tableLayoutPanel2.Location = new Point(60, 139);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
-            tableLayoutPanel2.RowCount = 2;
+            tableLayoutPanel2.RowCount = 1;
             tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 78.81166F));
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 21.1883411F));
             tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel2.Size = new Size(1970, 806);
+            tableLayoutPanel2.Size = new Size(1970, 833);
             tableLayoutPanel2.TabIndex = 4;
             // 
             // functDepText
             // 
-            functDepText.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            functDepText.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             functDepText.BackColor = SystemColors.GradientInactiveCaption;
-            functDepText.Location = new Point(3, 638);
+            functDepText.Location = new Point(1583, 3);
             functDepText.Multiline = true;
             functDepText.Name = "functDepText";
             functDepText.ReadOnly = true;
             functDepText.ScrollBars = ScrollBars.Horizontal;
-            functDepText.Size = new Size(1964, 165);
-            functDepText.TabIndex = 4;
+            functDepText.Size = new Size(384, 827);
+            functDepText.TabIndex = 5;
             functDepText.Visible = false;
             // 
             // funcDepenBtn
@@ -153,7 +153,7 @@
             funcDepenBtn.AutoSize = true;
             funcDepenBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             funcDepenBtn.BackColor = Color.CornflowerBlue;
-            funcDepenBtn.Location = new Point(1787, 978);
+            funcDepenBtn.Location = new Point(1776, 1014);
             funcDepenBtn.Name = "funcDepenBtn";
             funcDepenBtn.Size = new Size(271, 35);
             funcDepenBtn.TabIndex = 4;
@@ -167,7 +167,7 @@
             twoNFBtn.AutoSize = true;
             twoNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             twoNFBtn.BackColor = Color.CornflowerBlue;
-            twoNFBtn.Location = new Point(1389, 978);
+            twoNFBtn.Location = new Point(1389, 1014);
             twoNFBtn.Name = "twoNFBtn";
             twoNFBtn.Size = new Size(142, 35);
             twoNFBtn.TabIndex = 5;
@@ -181,7 +181,7 @@
             threeNFBtn.AutoSize = true;
             threeNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             threeNFBtn.BackColor = Color.CornflowerBlue;
-            threeNFBtn.Location = new Point(1595, 978);
+            threeNFBtn.Location = new Point(1594, 1014);
             threeNFBtn.Name = "threeNFBtn";
             threeNFBtn.Size = new Size(148, 35);
             threeNFBtn.TabIndex = 6;
@@ -245,10 +245,10 @@
         private DataGridView recordsFromDB;
         private TableLayoutPanel tableLayoutPanel2;
         private Button funcDepenBtn;
-        private TextBox functDepText;
         private Button twoNFBtn;
         private Button threeNFBtn;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel systemStatus;
+        private TextBox functDepText;
     }
 }

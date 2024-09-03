@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.ViewModels;
+using System.Data;
 using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 
 namespace RelationalSchemaNormalizerLibrary.Services
@@ -36,6 +38,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 var tableDetails = await _appContext.TableDetails
                    .Include(x => x.DatabaseDetail)
                 .Include(td => td.AttributeDetails)
+                .Include(td => td.GeneratedTables)
                    .FirstOrDefaultAsync(td => td.TableName == TableName && td.DatabaseDetail.DataBaseName == DatabaseName);
                 if (tableDetails == null)
                 {
@@ -141,8 +144,8 @@ namespace RelationalSchemaNormalizerLibrary.Services
                     return new ReturnData<bool> { Message = "TableDetail not found in DatabaseDetail.", Status = false };
                 }
 
-                // If GeneratedTable is new, add it to the context
-                _appContext.GeneratedTables.Add(generatedTable);
+                //// If GeneratedTable is new, add it to the context
+                //_appContext.GeneratedTables.Add(generatedTable);
 
                 // If TableDetail is not being tracked, update it in the context
                 _appContext.Update(existingTableDetail);
@@ -156,7 +159,23 @@ namespace RelationalSchemaNormalizerLibrary.Services
             {
                 return new ReturnData<bool> { Message = $"Error: {ex.Message}", Status = false };
             }
-        }
+            
 
+        }
+        public async Task<ReturnData<TableDetail>> UpdateTableNFStatus(TableDetail tableDetail, LevelOfNF level)
+        {
+            try
+            {
+                tableDetail.LevelOfNF = level;
+                _appContext.Update(tableDetail);
+                await _appContext.SaveChangesAsync();
+
+                return await GetTable(tableDetail.TableName, tableDetail.DatabaseDetail.DataBaseName);
+            }
+            catch (Exception ex)
+            {
+                return new ReturnData<TableDetail> { Message = $"Error: {ex.Message}", Status = false };
+            }
+        }
     }
 }
