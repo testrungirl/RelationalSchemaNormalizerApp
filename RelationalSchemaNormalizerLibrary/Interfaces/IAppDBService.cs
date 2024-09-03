@@ -16,5 +16,6 @@ namespace RelationalSchemaNormalizerLibrary.Interfaces
         Task<ReturnData<bool>> AddNewTableToAppDB(string DatabaseName, TableDetail tableDetail, List<AttributeDetail> attributeDetails);
         Task<ReturnData<DatabaseDetail>> GetDatabase(string DatabaseName);
         Task<ReturnData<List<DatabaseDetail>>> GetAllDatabases();
+        Task<ReturnData<TableDetail>> UpdateTableNFStatus(TableDetail tableDetail, LevelOfNF level);
     }
 }

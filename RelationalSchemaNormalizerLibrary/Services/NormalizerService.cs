@@ -83,10 +83,12 @@ namespace RelationalSchemaNormalizerLibrary.Services
             var dependencies = new Dictionary<string, List<string>>();
 
             // Step 3: Check dependency for each pair of non-key attributes
-            foreach (var A in nonKeyAttributes)
+            for (int i = nonKeyAttributes.Count - 1; i >= 0; i--)
             {
-                foreach (var B in nonKeyAttributes)
+                var A = nonKeyAttributes[i];
+                for (int j = nonKeyAttributes.Count - 2; j >= 0; j--)
                 {
+                    var B = nonKeyAttributes[j];
                     if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
                         continue; // Skip if A == B or B is already known to depend on A
 

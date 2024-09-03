@@ -1,5 +1,6 @@
 ﻿using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
+using RelationalSchemaNormalizerLibrary.Services;
 using Svg;
 using System.Data;
 using System.Text;
@@ -13,9 +14,12 @@ namespace RelationalSchemaNormalizerUI
         private readonly IDynamicDBService _databaseService;
         private readonly INormalizerService _normalizerService;
         private readonly IAppDBService _appDbService;
+        private readonly DependencyAnalyzer _dependencyAnalyzer;
         private string _databaseName;
         private string textFile;
         private List<string> keyAttributes;
+        private TableDetail tableDetail;
+        DataTable originalRecords;
 
         public TableControl(IDynamicDBService databaseService, INormalizerService normalizerService, IAppDBService appDBService)
         {
@@ -24,79 +28,60 @@ namespace RelationalSchemaNormalizerUI
             _databaseService = databaseService;
             _normalizerService = normalizerService;
             _appDbService = appDBService;
+            _dependencyAnalyzer = new DependencyAnalyzer(normalizerService, appDBService);
             _databaseName = "appContextDB";
             textFile = string.Empty;
             keyAttributes = new List<string>();
+            tableDetail = null;
+            originalRecords = null;
+
 
         }
         public async void Initialize(string tbName)
         {
             tableName.Text = tbName;
 
-            var tableDetails = await GetTableDetails(tbName, _databaseName);
-            if (tableDetails == null) return;
+            tableDetail = await GetTableDetailAsync(tbName, _databaseName);
+            if (tableDetail == null) return;
 
-            var retrievedRecords = await GetRetrievedRecords(tableDetails);
-            if (retrievedRecords == null) return;
-            keyAttributes = tableDetails.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
+            originalRecords = await GetOriginalRecordsAsync(tableDetail);
+            if (originalRecords == null) return;
+            keyAttributes = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
 
-            PopulateAttributes(retrievedRecords, keyAttributes);
+            PopulateAttributes(originalRecords, keyAttributes);
 
         }
-        private async Task<TableDetail?> GetTableDetails(string tableName, string databaseName)
+        private async Task<TableDetail?> GetTableDetailAsync(string tableName, string databaseName)
         {
-            var tableDetails = await _appDbService.GetTable(tableName, databaseName);
-            if (!tableDetails.Status)
+            var tableDetail = await _appDbService.GetTable(tableName, databaseName);
+            if (!tableDetail.Status)
             {
-                ShowStatus(tableDetails.Message, "Error from Database");
+                ShowStatus(tableDetail.Message, "Error from Database");
                 return null;
             }
 
-            return tableDetails.Data;
+            return tableDetail.Data;
         }
-        private async Task<DataTable?> GetRetrievedRecords(TableDetail tableDetails)
+
+        private async Task<DataTable?> GetOriginalRecordsAsync(TableDetail tableDetail)
         {
-            var retrievedRecords = await _databaseService.RetrieveRecordsFromTable(tableDetails);
-            if (!retrievedRecords.Status)
+            var originalRecords = await _databaseService.RetrieveRecordsFromTable(tableDetail);
+            if (!originalRecords.Status)
             {
-                ShowStatus(retrievedRecords.Message, "Error from Database");
+                ShowStatus(originalRecords.Message, "Error from Database");
                 return null;
             }
-            return retrievedRecords.Data;
+            return originalRecords.Data;
         }
+
         private void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
         {
             MessageBox.Show(message, caption, MessageBoxButtons.OK, icon);
         }
-        private string OpenFileDialogAndGetFileName()
-        {
-            OpenFileDialog dialog = new OpenFileDialog
-            {
-                InitialDirectory = "C:\\Users",
-                Filter = "CSV files (*.csv)|*.csv",
-                FilterIndex = 1
-            };
 
-            return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : string.Empty;
-        }
         private async void addRecordFromFileBtn_Click(object sender, EventArgs e)
         {
-            AddBulkRecordsForm modalForm = new AddBulkRecordsForm();
-            modalForm.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-
-            modalForm.FileInputText.Click += (s, ev) =>
-            {
-                string fileName = OpenFileDialogAndGetFileName();
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    textFile = fileName;
-                    modalForm.FileInputText.Text = textFile; ;
-                }
-                else
-                {
-                    modalForm.StatusPanel.Text = "No file selected.";
-                }
-            };
+            AddBulkRecordsForm modalForm = CreateModalForm();
 
             DialogResult result;
             do
@@ -107,8 +92,7 @@ namespace RelationalSchemaNormalizerUI
                     if (!string.IsNullOrEmpty(textFile))
                     {
                         modalForm.StatusPanel.Text = "Uploading...";
-                        // Simulate an async upload operation
-                        modalForm.StatusPanel.Text = await uploadBtn_Click();
+                        modalForm.StatusPanel.Text = await UploadFileAndSaveRecordsAsync();
                     }
                     else
                     {
@@ -118,29 +102,64 @@ namespace RelationalSchemaNormalizerUI
 
             } while (result != DialogResult.Cancel);
         }
-        private async Task<string> uploadBtn_Click()
+        public static string OpenCsvFileDialog()
+        {
+            OpenFileDialog dialog = new OpenFileDialog
+            {
+                InitialDirectory = "C:\\Users",
+                Filter = "CSV files (*.csv)|*.csv",
+                FilterIndex = 1
+            };
+
+            return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : string.Empty;
+        }
+        private AddBulkRecordsForm CreateModalForm()
+        {
+            var modalForm = new AddBulkRecordsForm
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            modalForm.FileInputText.Click += (s, ev) =>
+            {
+                string fileName = OpenCsvFileDialog();
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    textFile = fileName;
+                    modalForm.FileInputText.Text = textFile;
+                }
+                else
+                {
+                    modalForm.StatusPanel.Text = "No file selected.";
+                }
+            };
+
+            return modalForm;
+        }
+
+        private async Task<string> UploadFileAndSaveRecordsAsync()
         {
             try
             {
-                var tableDetails = await GetTableDetails(tableName.Text, _databaseName);
-                if (tableDetails == null) return "Could not retrieve Table from Database";
+                var tableDetail = await GetTableDetailAsync(tableName.Text, _databaseName);
+                if (tableDetail == null) return "Could not retrieve Table from Database";
 
-                var readFile = await _databaseService.ImportDataFromFile(tableDetails, textFile);
+                var readFile = await _databaseService.ImportDataFromFile(tableDetail, textFile);
                 if (!readFile.Status)
                 {
                     return readFile.Message;
                 }
 
-                var saveRecords = await _databaseService.InsertRecordsIntoTable(tableDetails, readFile.Data);
+                var saveRecords = await _databaseService.InsertRecordsIntoTable(tableDetail, readFile.Data);
                 if (!saveRecords.Status)
                 {
                     return saveRecords.Message;
                 }
 
-                var retrievedRecords = await GetRetrievedRecords(tableDetails);
-                if (retrievedRecords == null) return "No data retrieved";
+                originalRecords = await GetOriginalRecordsAsync(tableDetail);
+                if (originalRecords == null) return "No data retrieved";
 
-                PopulateAttributes(retrievedRecords, keyAttributes);
+                PopulateAttributes(originalRecords, keyAttributes);
                 return "Records retrieved successfully!";
             }
             catch (Exception ex)
@@ -148,19 +167,21 @@ namespace RelationalSchemaNormalizerUI
                 return $"Error: {ex.Message}";
             }
         }
+
         private void PopulateAttributes(DataTable records, List<string> keyAttributes)
         {
             recordsFromDB.DataSource = records;
-            recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, keyAttributes);
+            recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
         }
-        private void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, List<string> keyAttributes)
+
+        private void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0) // Only handle column headers
             {
-                string columnName = recordsFromDB.Columns[e.ColumnIndex].HeaderText;
+                string columnName = dataGridView.Columns[e.ColumnIndex].HeaderText;
 
                 // Check if the column is in the keyAttributes list
-                if (keyAttributes.Contains(columnName))
+                if (keyAttributes.Any(attr => attr.Equals(columnName, StringComparison.OrdinalIgnoreCase)))
                 {
                     e.PaintBackground(e.ClipBounds, true);
 
@@ -187,126 +208,107 @@ namespace RelationalSchemaNormalizerUI
                 else
                 {
                     // If the column is not a key attribute, paint the header normally
-                    e.Paint(e.ClipBounds, DataGridViewPaintParts.All);
+                    e.PaintBackground(e.ClipBounds, true);
+
+                    // Draw the text in the normal position without the image
+                    TextRenderer.DrawText(e.Graphics, columnName, e.CellStyle.Font, new Point(e.CellBounds.Left + 4, e.CellBounds.Top + 4), e.CellStyle.ForeColor);
+
                     e.Handled = true;
                 }
             }
         }
+
         private Bitmap ConvertSvgToBitmap(Stream svgStream, int width, int height)
         {
-            // Load the SVG document
             var svgDocument = Svg.SvgDocument.Open<Svg.SvgDocument>(svgStream);
-
-            // Set the desired size
             svgDocument.Width = new SvgUnit(SvgUnitType.Pixel, width);
             svgDocument.Height = new SvgUnit(SvgUnitType.Pixel, height);
-
-            // Render the SVG to a bitmap
             return svgDocument.Draw();
-        }
-        private string AnalyzeFunctionalDependencies(StringBuilder sb, TableDetail tableDetails, DataTable retrievedRecords)
-        {
-            List<DataTable> datatablesIn2NF = new List<DataTable>();
-            List<DataTable> datatablesIn3NF = new List<DataTable>();
-
-            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetails.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName))}");
-
-            // Get functional dependencies
-            var functionalDependencies = _normalizerService.FindPartialDependencies(tableDetails.AttributeDetails, retrievedRecords).Data;
-
-            // Get non-key attribute names
-            var nonKeyAttributeNames = tableDetails.AttributeDetails
-                .Where(attribute => !attribute.KeyAttribute)
-                .Select(attribute => attribute.AttributeName)
-                .ToList();
-
-            // Get transitive dependencies
-            var transitiveDependencies = _normalizerService.FindTransitiveDependencies(nonKeyAttributeNames, tableDetails.AttributeDetails, retrievedRecords);
-
-            if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
-                (transitiveDependencies == null || transitiveDependencies.Count == 0))
-            {
-                // No functional or transitive dependencies
-                sb.AppendLine("Table is in 3rd Normal Form");
-            }
-            else if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
-                     (transitiveDependencies != null && transitiveDependencies.Count > 0))
-            {
-                // Transitive dependencies exist but no functional dependencies
-                sb.AppendLine("Table is in 2nd Normal Form");
-            }
-            else if ((functionalDependencies != null && functionalDependencies.Count > 0) &&
-                     (transitiveDependencies != null && transitiveDependencies.Count > 0))
-            {
-                // Both functional and transitive dependencies exist
-                sb.AppendLine("Table is in 1st Normal Form");
-            }
-
-            // Output functional dependencies
-            if (functionalDependencies != null && functionalDependencies.Count > 0)
-            {
-                foreach (var kvp in functionalDependencies)
-                {
-                    var key = kvp.Key;
-                    var dependentAttributes = kvp.Value;
-                    var keyParts = key.Split(',');
-
-                    sb.AppendLine(keyParts.Length > 1
-                        ? $"Functional dependency: ({string.Join(", ", keyParts)}) -> {string.Join(", ", dependentAttributes)} - Partial dependency"
-                        : $"Functional dependency: {key} -> {string.Join(", ", dependentAttributes)} - Partial dependency");
-                }
-
-                var functionalDependenciesDatatable = _normalizerService.FindPartialDependencies(tableDetails.AttributeDetails, retrievedRecords, true).Data;
-                if (functionalDependenciesDatatable != null)
-                {
-                    datatablesIn2NF = (_normalizerService.RestructureTableToNormalForm(functionalDependenciesDatatable, retrievedRecords)).Data;
-                    //DisplayTab("2ndNF", "Tables in 2nd NF", 2, "2NFInput", "I am a girl");
-                }
-            }
-
-            // Output transitive dependencies
-            if (transitiveDependencies != null && transitiveDependencies.Count > 0)
-            {
-                foreach (var item in transitiveDependencies)
-                {
-                    sb.AppendLine($"Functional dependency: {item.Key} -> {string.Join(", ", item.Value)} - Transitive dependency");
-                }
-
-                sb.AppendLine();
-
-                if (functionalDependencies != null && functionalDependencies.Count > 0)
-                {
-                    functionalDependencies = _normalizerService.FindPartialDependencies(tableDetails.AttributeDetails, retrievedRecords, true).Data;
-                    var allFunctionalDependencies = _normalizerService.UpdateFunctionalWithTransitiveDependencies(functionalDependencies, transitiveDependencies);
-                    datatablesIn3NF = (_normalizerService.RestructureTableToNormalForm(allFunctionalDependencies, retrievedRecords)).Data;
-                    //DisplayTab("3rdNF", "Tables in 3rd NF", 3, "3NFInput", "I am a girl");
-
-                }
-                else
-                {
-                    datatablesIn3NF = (_normalizerService.RestructureTableToNormalForm(transitiveDependencies, retrievedRecords)).Data;
-                    //DisplayTab("3rdNF", "Tables in 3rd NF", 2, "3NFInput", "I am a girl");
-
-                }
-            }
-            return sb.ToString();
         }
 
         private async void funcDepenBtn_Click(object sender, EventArgs e)
         {
             var sb = new StringBuilder();
-            var tableDetails = await GetTableDetails(tableName.Text, _databaseName);
-            if (tableDetails == null) return;
+            functDepText.Visible = true;
+            functDepText.Text = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords);
+        }
 
-            var retrievedRecords = await GetRetrievedRecords(tableDetails);
-            if (retrievedRecords == null || retrievedRecords.Rows.Count < 2)
+        private void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
+        {
+            tableLayoutPanel2.Controls.Clear();
+
+            Panel scrollablePanel = new Panel
             {
-                ShowStatus("There must be a minimum of two records in this table", "Validation Error");
-                return;
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            TableLayoutPanel tableLayoutPanel = CreateTableLayoutPanel(dataTables.Count);
+            for (int i = 0; i < dataTables.Count; i++)
+            {
+                DataTable dataTable = dataTables[i];
+                Label label = CreateDataGridLabel(i);
+                DataGridView dgv = CreateDataGridView(dataTable, keyAttributes);
+
+                tableLayoutPanel.Controls.Add(label, 0, i * 2);
+                tableLayoutPanel.Controls.Add(dgv, 0, i * 2 + 1);
             }
 
-            functDepText.Visible = true;
-            functDepText.Text = AnalyzeFunctionalDependencies(sb, tableDetails, retrievedRecords);
+            scrollablePanel.Controls.Add(tableLayoutPanel);
+            tableLayoutPanel2.Controls.Add(scrollablePanel, 0, 0);
+        }
+
+        private static TableLayoutPanel CreateTableLayoutPanel(int rowCount)
+        {
+            TableLayoutPanel tableLayoutPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(20),
+                ColumnCount = 1,
+                RowCount = rowCount * 2
+            };
+            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            for (int i = 0; i < rowCount; i++)
+            {
+                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 300));
+            }
+
+            return tableLayoutPanel;
+        }
+
+        private static Label CreateDataGridLabel(int index)
+        {
+            return new Label
+            {
+                Text = $"DataGrid {index + 1}",
+                Anchor = AnchorStyles.None,
+                TextAlign = ContentAlignment.MiddleCenter,
+                AutoSize = true
+            };
+        }
+
+        private DataGridView CreateDataGridView(DataTable dataTable, List<string> keyAttributes)
+        {
+            DataGridView dgv = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                DataSource = dataTable,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
+                AutoSize = true,
+                BackgroundColor = SystemColors.ButtonHighlight,
+                GridColor = SystemColors.ButtonFace
+            };
+
+            dgv.CellPainting += (s, e) => DataGridView_CellPainting(s, e, dgv, keyAttributes);
+            return dgv;
         }
     }
 }
