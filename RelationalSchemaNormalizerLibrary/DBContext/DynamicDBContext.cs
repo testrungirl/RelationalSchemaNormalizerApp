@@ -103,6 +103,108 @@ namespace RelationalSchemaNormalizerLibrary.DBContext
             }
             return returnData;
         }
+        public ReturnData<bool> CreateOrUpdateDatabase(GeneratedTable generatedTable, List<ForeignKeyDetail>? foreignKeys = null)
+        {
+            var returnData = new ReturnData<bool>();
+            this.Database.EnsureCreated();
+
+            var conn = this.Database.GetDbConnection();
+
+            try
+            {
+                conn.Open();
+
+                using (var cmd = conn.CreateCommand())
+                {
+                    // Check if the table exists
+                    cmd.CommandText = $"SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = '{generatedTable.TableName}'";
+                    var tableExists = cmd.ExecuteScalar() != null;
+
+                    if (!tableExists)
+                    {
+                        var primaryKeyColumns = string.Join(", ", generatedTable.GenTableAttributeDetails
+                            .Where(attr => attr.KeyAttribute)  // Assuming KeyAttribute marks primary key columns
+                            .Select(attr => attr.AttributeName));
+
+                        if (string.IsNullOrEmpty(primaryKeyColumns))
+                        {
+                            throw new InvalidOperationException($"Table {generatedTable.TableName} has no primary key defined.");
+                        }
+
+                        // Construct the CREATE TABLE SQL command
+                        var columnsDefinition = string.Join(", ", generatedTable.GenTableAttributeDetails.Select(attr =>
+                            $"{attr.AttributeName} {GetSqlType(attr.DataType)} {(attr.KeyAttribute ? "NOT NULL" : "NULL")}"));
+
+                        // Add foreign key definitions if any
+                        if (foreignKeys != null)
+                        {
+                            var foreignKeyDefinitions = new List<string>();
+                            foreach (var fk in foreignKeys)
+                            {
+                                // Ensure the referenced table exists
+                                cmd.CommandText = $"SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = '{fk.ReferencedTable}'";
+                                var referencedTableExists = cmd.ExecuteScalar() != null;
+
+                                if (!referencedTableExists)
+                                {
+                                    throw new InvalidOperationException($"Referenced table {fk.ReferencedTable} does not exist for foreign key {fk.ColumnName} in table {generatedTable.TableName}.");
+                                }
+
+                                // Ensure the referenced column exists in the referenced table
+                                cmd.CommandText = $"SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{fk.ReferencedTable}' AND COLUMN_NAME = '{fk.ColumnName}'";
+                                var referencedColumnExists = cmd.ExecuteScalar() != null;
+
+                                if (!referencedColumnExists)
+                                {
+                                    throw new InvalidOperationException($"Referenced column {fk.ColumnName} does not exist in referenced table {fk.ReferencedTable}.");
+                                }
+
+                                foreignKeyDefinitions.Add($"CONSTRAINT FK_{generatedTable.TableName}_{fk.ColumnName} FOREIGN KEY ({fk.ColumnName}) REFERENCES {fk.ReferencedTable}({fk.ColumnName})");
+                            }
+
+                            var foreignKeySql = string.Join(", ", foreignKeyDefinitions);
+                            if (!string.IsNullOrEmpty(foreignKeySql))
+                            {
+                                columnsDefinition += $", {foreignKeySql}";
+                            }
+                        }
+
+                        cmd.CommandText = $"CREATE TABLE {generatedTable.TableName} ({columnsDefinition}, PRIMARY KEY ({primaryKeyColumns}));";
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Check and add missing columns
+                    foreach (var attribute in generatedTable.GenTableAttributeDetails)
+                    {
+                        cmd.CommandText = $"SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{generatedTable.TableName}' AND COLUMN_NAME = '{attribute.AttributeName}'";
+                        var columnExists = cmd.ExecuteScalar() != null;
+
+                        if (!columnExists)
+                        {
+                            // Add the column if it doesn't exist
+                            var columnDefinition = $"{attribute.AttributeName} {GetSqlType(attribute.DataType)}";
+                            cmd.CommandText = $"ALTER TABLE {generatedTable.TableName} ADD {columnDefinition};";
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    returnData = new ReturnData<bool> { Data = true, Status = true };
+                }
+            }
+            catch (Exception ex)
+            {
+                returnData = new ReturnData<bool> { Message = $"Error creating or updating the database: {ex.Message}", Status = false };
+            }
+            finally
+            {
+                if (conn.State == ConnectionState.Open)
+                {
+                    conn.Close();
+                }
+            }
+            return returnData;
+        }
+
 
         public ReturnData<bool> InsertDataIntoTable(DataTable dataTable, string tableName)
         {

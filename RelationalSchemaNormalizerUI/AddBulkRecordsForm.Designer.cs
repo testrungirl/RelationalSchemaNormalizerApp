@@ -85,7 +85,7 @@
             statusPanel.Multiline = true;
             statusPanel.Name = "statusPanel";
             statusPanel.ReadOnly = true;
-            statusPanel.ScrollBars = ScrollBars.Both;
+            statusPanel.ScrollBars = ScrollBars.Vertical;
             statusPanel.Size = new Size(732, 72);
             statusPanel.TabIndex = 4;
             // 

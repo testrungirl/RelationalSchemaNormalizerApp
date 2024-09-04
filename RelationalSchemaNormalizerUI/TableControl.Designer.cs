@@ -38,12 +38,10 @@
             funcDepenBtn = new Button();
             twoNFBtn = new Button();
             threeNFBtn = new Button();
-            statusStrip1 = new StatusStrip();
-            systemStatus = new ToolStripStatusLabel();
+            verifyNormalizationBtn = new Button();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)recordsFromDB).BeginInit();
             tableLayoutPanel2.SuspendLayout();
-            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -153,7 +151,7 @@
             funcDepenBtn.AutoSize = true;
             funcDepenBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             funcDepenBtn.BackColor = Color.CornflowerBlue;
-            funcDepenBtn.Location = new Point(1776, 1014);
+            funcDepenBtn.Location = new Point(1339, 1005);
             funcDepenBtn.Name = "funcDepenBtn";
             funcDepenBtn.Size = new Size(271, 35);
             funcDepenBtn.TabIndex = 4;
@@ -167,13 +165,14 @@
             twoNFBtn.AutoSize = true;
             twoNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             twoNFBtn.BackColor = Color.CornflowerBlue;
-            twoNFBtn.Location = new Point(1389, 1014);
+            twoNFBtn.Location = new Point(1643, 1005);
             twoNFBtn.Name = "twoNFBtn";
-            twoNFBtn.Size = new Size(142, 35);
+            twoNFBtn.Size = new Size(175, 35);
             twoNFBtn.TabIndex = 5;
-            twoNFBtn.Text = "Conver to 2 NF";
+            twoNFBtn.Text = "View 2nd NF Tables";
             twoNFBtn.UseVisualStyleBackColor = false;
             twoNFBtn.Visible = false;
+            twoNFBtn.Click += twoNFBtn_Click;
             // 
             // threeNFBtn
             // 
@@ -181,34 +180,29 @@
             threeNFBtn.AutoSize = true;
             threeNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             threeNFBtn.BackColor = Color.CornflowerBlue;
-            threeNFBtn.Location = new Point(1594, 1014);
+            threeNFBtn.Location = new Point(1859, 1005);
             threeNFBtn.Name = "threeNFBtn";
-            threeNFBtn.Size = new Size(148, 35);
+            threeNFBtn.Size = new Size(171, 35);
             threeNFBtn.TabIndex = 6;
-            threeNFBtn.Text = "Convert to 3 NF";
+            threeNFBtn.Text = "View 3rd NF Tables";
             threeNFBtn.UseVisualStyleBackColor = false;
             threeNFBtn.Visible = false;
+            threeNFBtn.Click += threeNFBtn_Click;
             // 
-            // statusStrip1
+            // verifyNormalizationBtn
             // 
-            statusStrip1.BackColor = SystemColors.ActiveCaption;
-            statusStrip1.BackgroundImageLayout = ImageLayout.None;
-            statusStrip1.ImageScalingSize = new Size(24, 24);
-            statusStrip1.Items.AddRange(new ToolStripItem[] { systemStatus });
-            statusStrip1.Location = new Point(0, 1052);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(2099, 39);
-            statusStrip1.TabIndex = 7;
-            statusStrip1.Text = "statusStrip1";
-            // 
-            // systemStatus
-            // 
-            systemStatus.AccessibleName = "systemStatus";
-            systemStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            systemStatus.ImageAlign = ContentAlignment.TopRight;
-            systemStatus.Name = "systemStatus";
-            systemStatus.Size = new Size(83, 32);
-            systemStatus.Text = "Ready";
+            verifyNormalizationBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            verifyNormalizationBtn.AutoSize = true;
+            verifyNormalizationBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            verifyNormalizationBtn.BackColor = Color.CornflowerBlue;
+            verifyNormalizationBtn.Location = new Point(1643, 1005);
+            verifyNormalizationBtn.Name = "verifyNormalizationBtn";
+            verifyNormalizationBtn.Size = new Size(147, 35);
+            verifyNormalizationBtn.TabIndex = 7;
+            verifyNormalizationBtn.Text = "Normalize Table\r\n";
+            verifyNormalizationBtn.UseVisualStyleBackColor = false;
+            verifyNormalizationBtn.Visible = false;
+            verifyNormalizationBtn.Click += verifyNormalizationBtn_Click;
             // 
             // TableControl
             // 
@@ -217,7 +211,7 @@
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
-            Controls.Add(statusStrip1);
+            Controls.Add(verifyNormalizationBtn);
             Controls.Add(threeNFBtn);
             Controls.Add(twoNFBtn);
             Controls.Add(tableLayoutPanel2);
@@ -230,8 +224,6 @@
             ((System.ComponentModel.ISupportInitialize)recordsFromDB).EndInit();
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
-            statusStrip1.ResumeLayout(false);
-            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -247,8 +239,7 @@
         private Button funcDepenBtn;
         private Button twoNFBtn;
         private Button threeNFBtn;
-        private StatusStrip statusStrip1;
-        private ToolStripStatusLabel systemStatus;
         private TextBox functDepText;
+        private Button verifyNormalizationBtn;
     }
 }

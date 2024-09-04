@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RelationalSchemaNormalizerLibrary.Models;
+using System.Data;
 
 namespace RelationalSchemaNormalizerLibrary.ViewModels
 {
@@ -14,18 +11,30 @@ namespace RelationalSchemaNormalizerLibrary.ViewModels
     }
     public class Dependency
     {
-        public string DependentAttribute { get; set; }
         public string NonKeyAttribute { get; set; }
         public List<string> KeySubset { get; set; }
-    }
-    public class FunctionalDependency
-    {
-        public List<string> Determinants { get; set; }
-        public List<string> Dependents { get; set; }
     }
     public class ForeignKeyDetail
     {
         public string ColumnName { get; set; }
         public string ReferencedTable { get; set; }
+    }
+    public class DependencyAnalysisResult
+    {
+        public string AnalysisResult { get; set; }
+        public List<NormalFormsData> TablesIn2NFData { get; set; } = new List<NormalFormsData>();
+        public List<NormalFormsData> TablesIn3NFData { get; set; } = new List<NormalFormsData>();
+    }
+    public class NormalFormsData
+    {
+        public DataTable DataTable { get; set; }
+        public List<string> KeyAttributes { get; set; }
+        public List<string> NonKeyAttributes { get; set; }
+    }
+    public class NormalizedTablesInputs
+    {
+        public DataTable DataTable { get; set; }
+        public GeneratedTable GeneratedTable { get; set; }
+        public List<ForeignKeyDetail> ForeignKeysDetails { get; set; }
     }
 }

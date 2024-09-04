@@ -6,14 +6,9 @@ using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Utilities;
 using RelationalSchemaNormalizerLibrary.ViewModels;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Formats.Asn1;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RelationalSchemaNormalizerLibrary.Services
 {
@@ -41,6 +36,23 @@ namespace RelationalSchemaNormalizerLibrary.Services
             using (var dynamicContext = new DynamicDbContext(optionsBuilder.Options))
             {
                 return dynamicContext.CreateOrUpdateDatabase(tableDetail);
+            }
+        }
+        public ReturnData<bool> CreateDatabaseSchema(GeneratedTable tableInNewNF, List<ForeignKeyDetail> foreignKeyDetails, string connectionString)
+        {
+            try
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<DynamicDbContext>();
+                optionsBuilder.UseSqlServer(connectionString);
+
+                using (var dynamicContext = new DynamicDbContext(optionsBuilder.Options))
+                {
+                    return dynamicContext.CreateOrUpdateDatabase(tableInNewNF, foreignKeyDetails);
+                }
+            }
+            catch(Exception ex)
+            {
+                return new ReturnData<bool> { Message = $"Error: {ex.Message}", Status = false };
             }
         }
 
@@ -141,6 +153,24 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 return new ReturnData<bool> { Message = $"Error with inserting to DB:  {ex.Message}", Status = false };
             }
         }
+        public ReturnData<bool> InsertRecordsIntoTable(GeneratedTable generatedTable, DataTable dataTable, string conn)
+        {
+            try
+            {
+
+                var optionsBuilder = new DbContextOptionsBuilder<DynamicDbContext>();
+                optionsBuilder.UseSqlServer(conn);
+
+                using (var dynamicContext = new DynamicDbContext(optionsBuilder.Options))
+                {
+                    return dynamicContext.InsertDataIntoTable(dataTable, generatedTable.TableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ReturnData<bool> { Message = $"Error with inserting to DB:  {ex.Message}", Status = false };
+            }
+        }
         public async Task<ReturnData<DataTable>> RetrieveRecordsFromTable(TableDetail tableDetails)
         {
             try
@@ -148,6 +178,24 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
                 var optionsBuilder = new DbContextOptionsBuilder<DynamicDbContext>();
                 optionsBuilder.UseSqlServer(tableDetails.DatabaseDetail.ConnectionString);
+
+                using (var dynamicContext = new DynamicDbContext(optionsBuilder.Options))
+                {
+                    return dynamicContext.GetAllRecordsFromTable(tableDetails.TableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ReturnData<DataTable> { Message = $"Error with retrieving from Table:  {ex.Message}", Status = false };
+            }
+        }
+        public async Task<ReturnData<DataTable>> RetrieveRecordsFromTable(GeneratedTable tableDetails, string conn)
+        {
+            try
+            {
+
+                var optionsBuilder = new DbContextOptionsBuilder<DynamicDbContext>();
+                optionsBuilder.UseSqlServer(conn);
 
                 using (var dynamicContext = new DynamicDbContext(optionsBuilder.Options))
                 {

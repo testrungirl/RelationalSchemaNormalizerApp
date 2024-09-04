@@ -1,17 +1,21 @@
 ﻿using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Services;
+using RelationalSchemaNormalizerLibrary.ViewModels;
 using Svg;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Linq;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RelationalSchemaNormalizerUI
 {
     public partial class TableControl : UserControl
     {
 
-        private readonly IDynamicDBService _databaseService;
+        private readonly IDynamicDBService _dynamicDbService;
         private readonly INormalizerService _normalizerService;
         private readonly IAppDBService _appDbService;
         private readonly DependencyAnalyzer _dependencyAnalyzer;
@@ -21,11 +25,11 @@ namespace RelationalSchemaNormalizerUI
         private TableDetail tableDetail;
         DataTable originalRecords;
 
-        public TableControl(IDynamicDBService databaseService, INormalizerService normalizerService, IAppDBService appDBService)
+        public TableControl(IDynamicDBService dynamicDbService, INormalizerService normalizerService, IAppDBService appDBService)
         {
             InitializeComponent();
 
-            _databaseService = databaseService;
+            _dynamicDbService = dynamicDbService;
             _normalizerService = normalizerService;
             _appDbService = appDBService;
             _dependencyAnalyzer = new DependencyAnalyzer(normalizerService, appDBService);
@@ -48,6 +52,48 @@ namespace RelationalSchemaNormalizerUI
             if (originalRecords == null) return;
             keyAttributes = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
 
+            if (!string.IsNullOrWhiteSpace(tableDetail.Comments))
+            {
+                funcDepenBtn.Visible = false;
+                threeNFBtn.Visible = false;
+                twoNFBtn.Visible = false;
+                verifyNormalizationBtn.Visible = true;
+                functDepText.Visible = true;
+                functDepText.Text = tableDetail.Comments;
+
+            }
+            else if (tableDetail.LevelOfNF == LevelOfNF.NotChecked)
+            {
+                funcDepenBtn.Visible = true;
+                threeNFBtn.Visible = false;
+                twoNFBtn.Visible = false;
+                verifyNormalizationBtn.Visible = false;
+            }
+
+            else if (tableDetail.LevelOfNF == LevelOfNF.Third)
+            {
+                funcDepenBtn.Visible = false;
+                twoNFBtn.Visible = false;
+                threeNFBtn.Visible = false;
+                verifyNormalizationBtn.Visible = false;
+                functDepText.Visible = true;
+                functDepText.Text = tableDetail.Comments;
+            }
+            else if (tableDetail.LevelOfNF == LevelOfNF.Second)
+            {
+                funcDepenBtn.Visible = false;
+                threeNFBtn.Visible = true;
+                twoNFBtn.Visible = false;
+                verifyNormalizationBtn.Visible = false;
+            }
+            else if (tableDetail.LevelOfNF == LevelOfNF.First)
+            {
+                funcDepenBtn.Visible = false;
+                threeNFBtn.Visible = true;
+                twoNFBtn.Visible = true;
+                verifyNormalizationBtn.Visible = false;
+            }
+
             PopulateAttributes(originalRecords, keyAttributes);
 
         }
@@ -65,7 +111,7 @@ namespace RelationalSchemaNormalizerUI
 
         private async Task<DataTable?> GetOriginalRecordsAsync(TableDetail tableDetail)
         {
-            var originalRecords = await _databaseService.RetrieveRecordsFromTable(tableDetail);
+            var originalRecords = await _dynamicDbService.RetrieveRecordsFromTable(tableDetail);
             if (!originalRecords.Status)
             {
                 ShowStatus(originalRecords.Message, "Error from Database");
@@ -144,13 +190,13 @@ namespace RelationalSchemaNormalizerUI
                 var tableDetail = await GetTableDetailAsync(tableName.Text, _databaseName);
                 if (tableDetail == null) return "Could not retrieve Table from Database";
 
-                var readFile = await _databaseService.ImportDataFromFile(tableDetail, textFile);
+                var readFile = await _dynamicDbService.ImportDataFromFile(tableDetail, textFile);
                 if (!readFile.Status)
                 {
                     return readFile.Message;
                 }
 
-                var saveRecords = await _databaseService.InsertRecordsIntoTable(tableDetail, readFile.Data);
+                var saveRecords = await _dynamicDbService.InsertRecordsIntoTable(tableDetail, readFile.Data);
                 if (!saveRecords.Status)
                 {
                     return saveRecords.Message;
@@ -176,41 +222,30 @@ namespace RelationalSchemaNormalizerUI
 
         private void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
         {
-            if (e.RowIndex == -1 && e.ColumnIndex >= 0) // Only handle column headers
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
                 string columnName = dataGridView.Columns[e.ColumnIndex].HeaderText;
-
-                // Check if the column is in the keyAttributes list
                 if (keyAttributes.Any(attr => attr.Equals(columnName, StringComparison.OrdinalIgnoreCase)))
                 {
                     e.PaintBackground(e.ClipBounds, true);
-
-                    // Load the bitmap (ensure proper disposal in production code)
                     Bitmap bitmap;
                     using (var svgStream = new FileStream("./Imgs/key-svgrepo-com.svg", FileMode.Open, FileAccess.Read))
                     {
-                        bitmap = ConvertSvgToBitmap(svgStream, 20, 20); // Example dimensions
+                        bitmap = ConvertSvgToBitmap(svgStream, 20, 20);
                     }
 
-                    // Calculate the position to draw the image
-                    int imageX = e.CellBounds.Left + 4; // 4 pixels padding from left
+                    int imageX = e.CellBounds.Left + 4;
                     int imageY = e.CellBounds.Top + (e.CellBounds.Height - bitmap.Height) / 2;
 
-                    // Draw the image
                     e.Graphics.DrawImage(bitmap, new Point(imageX, imageY));
-
-                    // Draw the text next to the image
-                    int textX = imageX + bitmap.Width + 4; // Add space after the image
+                    int textX = imageX + bitmap.Width + 4;
                     TextRenderer.DrawText(e.Graphics, columnName, e.CellStyle.Font, new Point(textX, e.CellBounds.Top + 4), e.CellStyle.ForeColor);
 
-                    e.Handled = true; // Signal that we've handled the painting
+                    e.Handled = true;
                 }
                 else
                 {
-                    // If the column is not a key attribute, paint the header normally
                     e.PaintBackground(e.ClipBounds, true);
-
-                    // Draw the text in the normal position without the image
                     TextRenderer.DrawText(e.Graphics, columnName, e.CellStyle.Font, new Point(e.CellBounds.Left + 4, e.CellBounds.Top + 4), e.CellStyle.ForeColor);
 
                     e.Handled = true;
@@ -230,7 +265,11 @@ namespace RelationalSchemaNormalizerUI
         {
             var sb = new StringBuilder();
             functDepText.Visible = true;
-            functDepText.Text = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords);
+            functDepText.Text = (await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords)).AnalysisResult;
+
+            tableDetail.Comments = functDepText.Text.Trim();
+            _appDbService.UpdateTable(tableDetail);
+            //TODO: display necessary buttons
         }
 
         private void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
@@ -310,5 +349,263 @@ namespace RelationalSchemaNormalizerUI
             dgv.CellPainting += (s, e) => DataGridView_CellPainting(s, e, dgv, keyAttributes);
             return dgv;
         }
+        private async void verifyNormalizationBtn_Click(object sender, EventArgs e)
+        {
+            ConfirmationAlert alert = new ConfirmationAlert()
+            {
+                Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Left
+            };
+
+            DialogResult result;
+            do
+            {
+                result = alert.ShowDialog();
+                if (result == DialogResult.Yes)
+                {
+                    var outputs = await HandleNormalization(alert);
+
+
+                }
+                else
+                {
+                    alert.StatusTextBox.Text = "An error occurred";
+                }
+            }
+            while (result != DialogResult.Cancel);
+        }
+
+        private async Task<(List<NormalizedTablesInputs> DBDetailsFor2NFCreation, List<GeneratedTable> gen2NFTableList, List<NormalizedTablesInputs> DBDetailsFor3NFCreation, List<GeneratedTable> gen3NFTableList)> HandleNormalization(ConfirmationAlert alert)
+        {
+            var sb = new StringBuilder();
+            var analysisResult = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords, true);
+
+            if (analysisResult != null)
+            {
+                var gen2NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn2NFData, LevelOfNF.Second, tableDetail);
+                var DBDetailsFor2NFCreation = CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
+
+                await HandleNFTableCreationAsync(DBDetailsFor2NFCreation);
+
+                var gen3NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn3NFData, LevelOfNF.Third, tableDetail);
+                var DBDetailsFor3NFCreation = CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
+
+                await HandleNFTableCreationAsync(DBDetailsFor3NFCreation);
+
+                //ShowStatus("Successful!", "Success Alert", MessageBoxIcon.Information);
+
+                // Close the dialog if successful
+                alert.DialogResult = DialogResult.OK;
+
+                return (DBDetailsFor2NFCreation, gen2NFTableList, DBDetailsFor3NFCreation, gen3NFTableList);
+            }
+            else
+            {
+                alert.StatusTextBox.Text = "No analysis result found.";
+                return (null, null, null, null);
+            }
+        }
+
+        private async Task<List<GeneratedTable>> GenerateNormalizedTables(List<NormalFormsData> tablesData, LevelOfNF levelOfNF, TableDetail tableDetail)
+        {
+            List<GeneratedTable> generatedTableList = new();
+
+            foreach (var data in tablesData.OrderBy(nfd => nfd.KeyAttributes.Count).ToList())
+            {
+                var generatedTable = CreateGeneratedTable(levelOfNF, tableDetail);
+
+                List<GenTableAttributeDetail> attributes = GetAttributesForTable(data, tableDetail, generatedTable);
+                generatedTable.GenTableAttributeDetails = attributes;
+
+                generatedTableList.Add(generatedTable);
+            }
+
+            return generatedTableList;
+        }
+
+        private GeneratedTable CreateGeneratedTable(LevelOfNF levelOfNF, TableDetail tableDetail)
+        {
+            return new GeneratedTable()
+            {
+                Id = Guid.NewGuid().ToString(),
+                LevelOfNF = levelOfNF,
+                TableName = tableDetail.TableName + "_" + Guid.NewGuid().ToString("N"),
+                TableDetailId = tableDetail.Id,
+            };
+        }
+
+        private List<GenTableAttributeDetail> GetAttributesForTable(NormalFormsData data, TableDetail tableDetail, GeneratedTable generatedTable)
+        {
+            List<GenTableAttributeDetail> attributes = new();
+
+            foreach (var attr in data.KeyAttributes)
+            {
+                attributes.Add(new GenTableAttributeDetail
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    AttributeName = attr,
+                    KeyAttribute = true,
+                    DataType = tableDetail.AttributeDetails.FirstOrDefault(x => x.AttributeName == attr).DataType,
+                    GeneratedTableId = generatedTable.Id
+                });
+            }
+
+            foreach (var attr in data.NonKeyAttributes)
+            {
+                attributes.Add(new GenTableAttributeDetail
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    AttributeName = attr,
+                    DataType = tableDetail.AttributeDetails.FirstOrDefault(x => x.AttributeName == attr).DataType,
+                    GeneratedTableId = generatedTable.Id
+                });
+            }
+
+            return attributes;
+        }
+
+        private List<NormalizedTablesInputs> CreateNormalizedTablesInputs(List<GeneratedTable> generatedTables, List<NormalFormsData> tablesData, LevelOfNF levelOfNF)
+        {
+            List<NormalizedTablesInputs> dbDetailsForCreation = new();
+
+            for (int i = 0; i < generatedTables.Count; i++)
+            {// Get the generated table with the fewest key attributes
+                var generatedTable = generatedTables
+                                      .OrderBy(x => x.GenTableAttributeDetails.Count(c => c.KeyAttribute))
+                                      .ElementAt(i);
+
+                // Find the corresponding data in tablesData where the key attributes match exactly
+                var data = tablesData
+                    .FirstOrDefault(td => td.KeyAttributes.Count == generatedTable.GenTableAttributeDetails.Count(attr => attr.KeyAttribute) &&
+                                          !td.KeyAttributes.Except(generatedTable.GenTableAttributeDetails
+                                              .Where(attr => attr.KeyAttribute)
+                                              .Select(attr => attr.AttributeName)).Any() &&
+                                          !generatedTable.GenTableAttributeDetails
+                                              .Where(attr => attr.KeyAttribute)
+                                              .Select(attr => attr.AttributeName)
+                                              .Except(td.KeyAttributes).Any());
+
+                var singleKeyAttributeTables = generatedTables
+                                        .Where(x => x.GenTableAttributeDetails.Count(c => c.KeyAttribute) == 1)
+                                        .ToList();
+
+
+                if (data.KeyAttributes.Count > 1)
+                {
+                    List<ForeignKeyDetail> foreignKeyDetails = GetForeignKeyDetails(data, singleKeyAttributeTables);
+                    dbDetailsForCreation.Add(new NormalizedTablesInputs
+                    {
+                        GeneratedTable = generatedTable,
+                        ForeignKeysDetails = foreignKeyDetails,
+                        DataTable = data.DataTable
+                    });
+                }
+                else
+                {
+                    dbDetailsForCreation.Add(new NormalizedTablesInputs
+                    {
+                        GeneratedTable = generatedTable,
+                        DataTable = data.DataTable,
+                        ForeignKeysDetails = new List<ForeignKeyDetail>(),
+
+                    });
+                }
+            }
+
+            return dbDetailsForCreation;
+        }
+
+        private List<ForeignKeyDetail> GetForeignKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
+        {
+            List<ForeignKeyDetail> foreignKeyDetails = new();
+
+            foreach (var attr in data.KeyAttributes)
+            {
+                string foreignKeyTableName = generatedTables.FirstOrDefault(x => x.GenTableAttributeDetails.Any(y => y.AttributeName == attr))?.TableName;
+                if (!string.IsNullOrEmpty(foreignKeyTableName))
+                {
+                    foreignKeyDetails.Add(new ForeignKeyDetail { ColumnName = attr, ReferencedTable = foreignKeyTableName });
+                }
+            }
+
+            return foreignKeyDetails;
+        }
+
+        private async void threeNFBtn_Click(object sender, EventArgs e)
+        {
+            List<DataTable> generated3NFTables = new();
+            var retrievedSchemaIn3NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+            foreach (var tableSchema in retrievedSchemaIn3NF)
+            {
+                var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
+                if (res != null)
+                {
+                    generated3NFTables.Add(res);
+                }
+            }
+        }
+
+        private async void twoNFBtn_Click(object sender, EventArgs e)
+        {
+            List<DataTable> generated2NFTables = new();
+            var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
+            foreach (var tableSchema in retrievedSchemaIn2NF)
+            {
+                var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
+                if (res != null)
+                {
+                    generated2NFTables.Add(res);
+                }
+            }
+        }
+
+        private async Task HandleNFTableCreationAsync(List<NormalizedTablesInputs> NormalizedTablesInputs)
+        {
+            if (NormalizedTablesInputs.Count > 0)
+            {
+                var singleKeyTables = NormalizedTablesInputs
+                    .Where(x => x.ForeignKeysDetails.Count == 0)
+                    .ToList();
+
+                var multiKeyTables = NormalizedTablesInputs
+                    .Where(x => x.ForeignKeysDetails.Count > 1)
+                    .ToList();
+
+                foreach (var data in singleKeyTables)
+                {
+                    CreateTable(data.GeneratedTable, tableDetail.DatabaseDetail.ConnectionString);
+                }
+                foreach (var data in multiKeyTables)
+                {
+                    CreateTable(data.GeneratedTable, tableDetail.DatabaseDetail.ConnectionString, data.ForeignKeysDetails);
+                }
+
+                tableDetail = (await UpdateNewTableInDB(tableDetail, NormalizedTablesInputs.Select(x => x.GeneratedTable).ToList())).Data;
+
+                foreach (var data in singleKeyTables)
+                {
+                    _dynamicDbService.InsertRecordsIntoTable(data.GeneratedTable, data.DataTable, tableDetail.DatabaseDetail.ConnectionString);
+                }
+                foreach (var data in multiKeyTables)
+                {
+                    _dynamicDbService.InsertRecordsIntoTable(data.GeneratedTable, data.DataTable, tableDetail.DatabaseDetail.ConnectionString);
+                }
+            }
+        }
+
+        private void CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null)
+        {
+            var createResult = _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
+            if (!createResult.Status)
+            {
+                throw new Exception($"Failed to create table {generatedTable.TableName}: {createResult.Message}");
+            }
+        }
+
+        public async Task<ReturnData<TableDetail>> UpdateNewTableInDB(TableDetail tableDetail, List<GeneratedTable> tables)
+        {
+            tableDetail.GeneratedTables.AddRange(tables);
+            return await _appDbService.UpdateTable(tableDetail);
+        }
+
     }
 }
