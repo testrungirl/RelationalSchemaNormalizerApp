@@ -23,7 +23,7 @@
     {
         public string Id { get; set; }
         public string TableName { get; set; }
-        public List<AttributeDetail> AttributeDetails { get; set; } = [];
+        public List<GenTableAttributeDetail> GenTableAttributeDetails { get; set; } = [];
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
         public LevelOfNF LevelOfNF { get; set; }
@@ -37,6 +37,15 @@
         public bool KeyAttribute { get; set; }
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
+    }
+    public class GenTableAttributeDetail
+    {
+        public string Id { get; set; }
+        public string AttributeName { get; set; }
+        public string DataType { get; set; }
+        public bool KeyAttribute { get; set; }
+        public string GeneratedTableId { get; set; }
+        public GeneratedTable GeneratedTable { get; set; }
     }
     public enum LevelOfNF
     {

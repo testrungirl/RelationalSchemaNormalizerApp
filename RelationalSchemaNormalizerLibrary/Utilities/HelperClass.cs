@@ -17,10 +17,12 @@ namespace RelationalSchemaNormalizerLibrary.Utilities
                 "double" => double.TryParse(value, out var doubleValue) ? doubleValue : throw new ArgumentException($"Invalid double value: {value}"),
                 "float" => float.TryParse(value, out var floatValue) ? floatValue : throw new ArgumentException($"Invalid float value: {value}"),
                 "guid" => Guid.TryParse(value, out var guidValue) ? guidValue : throw new ArgumentException($"Invalid GUID value: {value}"),
-                "int" => int.TryParse(value, out var intValue) ? intValue : throw new ArgumentException($"Invalid integer value: {value}"),
+                "int" or "int32" or "int64" => int.TryParse(value, out var intValue) ? intValue : throw new ArgumentException($"Invalid integer value: {value}"),
+                "decimal" => decimal.TryParse(value, out var decimalValue) ? decimalValue : throw new ArgumentException($"Invalid decimal value: {value}"),
                 _ => throw new ArgumentException($"Unsupported data type: {dataType}")
             };
         }
+
         public static List<string> GetKeyAttributes(List<AttributeDetail> attributes)
         {
             var attributesList = attributes.Where(attr => attr.KeyAttribute).ToList();

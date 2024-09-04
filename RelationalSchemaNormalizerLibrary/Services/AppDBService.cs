@@ -123,12 +123,12 @@ namespace RelationalSchemaNormalizerLibrary.Services
             }
 
         }
-        public async Task<ReturnData<bool>> AddGeneratedTableToTableDetail(DatabaseDetail databaseDetail, TableDetail tableDetail, GeneratedTable generatedTable, List<AttributeDetail> attributeDetails)
+        public async Task<ReturnData<bool>> AddGeneratedTableToTableDetail(DatabaseDetail databaseDetail, TableDetail tableDetail, GeneratedTable generatedTable, List<GenTableAttributeDetail> attributeDetails)
         {
             try
             {
                 // Step 1: Add attributes to the GeneratedTable
-                generatedTable.AttributeDetails.AddRange(attributeDetails);
+                generatedTable.GenTableAttributeDetails.AddRange(attributeDetails);
 
                 // Step 2: Add the GeneratedTable to the TableDetail
                 tableDetail.GeneratedTables.Add(generatedTable);
@@ -162,11 +162,10 @@ namespace RelationalSchemaNormalizerLibrary.Services
             
 
         }
-        public async Task<ReturnData<TableDetail>> UpdateTableNFStatus(TableDetail tableDetail, LevelOfNF level)
+        public async Task<ReturnData<TableDetail>> UpdateTable(TableDetail tableDetail)
         {
             try
             {
-                tableDetail.LevelOfNF = level;
                 _appContext.Update(tableDetail);
                 await _appContext.SaveChangesAsync();
 
@@ -177,5 +176,6 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 return new ReturnData<TableDetail> { Message = $"Error: {ex.Message}", Status = false };
             }
         }
+
     }
 }
