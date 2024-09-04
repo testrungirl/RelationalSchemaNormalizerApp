@@ -231,7 +231,7 @@ namespace RelationalSchemaNormalizerUI
             }
 
             // Save and create the database
-            var response = _dynamicDBService.SaveAndCreateDatabase(tableDetail);
+            var response = await _dynamicDBService.SaveAndCreateDatabase(tableDetail);
             if (!response.Status)
             {
                 ShowStatus(response.Message, "Table Creation Error");

@@ -15,11 +15,11 @@ namespace RelationalSchemaNormalizerLibrary.Services
     public class DynamicDBService : IDynamicDBService
     {
 
-        public ReturnData<bool> SaveAndCreateDatabase(TableDetail tableDetail)
+        public async Task<ReturnData<bool>> SaveAndCreateDatabase(TableDetail tableDetail)
         {
             try
             {
-                return CreateOrUpdateDatabaseSchema(tableDetail);
+                return await CreateOrUpdateDatabaseSchema(tableDetail);
 
             }
             catch (Exception ex)
@@ -28,7 +28,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
             }
         }
 
-        private ReturnData<bool> CreateOrUpdateDatabaseSchema(TableDetail tableDetail)
+        private async Task<ReturnData<bool>> CreateOrUpdateDatabaseSchema(TableDetail tableDetail)
         {
             var optionsBuilder = new DbContextOptionsBuilder<DynamicDbContext>();
             optionsBuilder.UseSqlServer(tableDetail.DatabaseDetail.ConnectionString);
@@ -38,7 +38,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 return dynamicContext.CreateOrUpdateDatabase(tableDetail);
             }
         }
-        public ReturnData<bool> CreateDatabaseSchema(GeneratedTable tableInNewNF, List<ForeignKeyDetail> foreignKeyDetails, string connectionString)
+        public async Task<ReturnData<bool>> CreateDatabaseSchema(GeneratedTable tableInNewNF, List<ForeignKeyDetail> foreignKeyDetails, string connectionString)
         {
             try
             {
@@ -153,7 +153,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 return new ReturnData<bool> { Message = $"Error with inserting to DB:  {ex.Message}", Status = false };
             }
         }
-        public ReturnData<bool> InsertRecordsIntoTable(GeneratedTable generatedTable, DataTable dataTable, string conn)
+        public async Task<ReturnData<bool>> InsertRecordsIntoTable(GeneratedTable generatedTable, DataTable dataTable, string conn)
         {
             try
             {

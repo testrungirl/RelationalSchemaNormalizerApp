@@ -104,7 +104,7 @@ namespace RelationalSchemaNormalizerUI
             return originalRecords.Data;
         }
 
-        private void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
+        private async void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
         {
             MessageBox.Show(message, caption, MessageBoxButtons.OK, icon);
         }
@@ -198,13 +198,13 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private void PopulateAttributes(DataTable records, List<string> keyAttributes)
+        private async void PopulateAttributes(DataTable records, List<string> keyAttributes)
         {
             recordsFromDB.DataSource = records;
             recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
         }
 
-        private void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
+        private async void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
@@ -215,7 +215,7 @@ namespace RelationalSchemaNormalizerUI
                     Bitmap bitmap;
                     using (var svgStream = new FileStream("./Imgs/key-svgrepo-com.svg", FileMode.Open, FileAccess.Read))
                     {
-                        bitmap = ConvertSvgToBitmap(svgStream, 20, 20);
+                        bitmap = await ConvertSvgToBitmap(svgStream, 20, 20);
                     }
 
                     int imageX = e.CellBounds.Left + 4;
@@ -237,7 +237,7 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private Bitmap ConvertSvgToBitmap(Stream svgStream, int width, int height)
+        private async Task<Bitmap> ConvertSvgToBitmap(Stream svgStream, int width, int height)
         {
             var svgDocument = Svg.SvgDocument.Open<Svg.SvgDocument>(svgStream);
             svgDocument.Width = new SvgUnit(SvgUnitType.Pixel, width);
@@ -256,7 +256,7 @@ namespace RelationalSchemaNormalizerUI
             //TODO: display necessary buttons
         }
 
-        private void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
+        private async void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
         {
             tableLayoutPanel2.Controls.Clear();
 
@@ -366,12 +366,12 @@ namespace RelationalSchemaNormalizerUI
             if (analysisResult != null)
             {
                 var gen2NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn2NFData, LevelOfNF.Second, tableDetail);
-                var DBDetailsFor2NFCreation = CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
+                var DBDetailsFor2NFCreation = await CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
 
                 await HandleNFTableCreationAsync(DBDetailsFor2NFCreation);
 
                 var gen3NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn3NFData, LevelOfNF.Third, tableDetail);
-                var DBDetailsFor3NFCreation = CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
+                var DBDetailsFor3NFCreation = await CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
 
                 await HandleNFTableCreationAsync(DBDetailsFor3NFCreation);
 
@@ -395,9 +395,9 @@ namespace RelationalSchemaNormalizerUI
 
             foreach (var data in tablesData.OrderBy(nfd => nfd.KeyAttributes.Count).ToList())
             {
-                var generatedTable = CreateGeneratedTable(levelOfNF, tableDetail);
+                var generatedTable = await CreateGeneratedTable(levelOfNF, tableDetail);
 
-                List<GenTableAttributeDetail> attributes = GetAttributesForTable(data, tableDetail, generatedTable);
+                List<GenTableAttributeDetail> attributes = await GetAttributesForTable(data, tableDetail, generatedTable);
                 generatedTable.GenTableAttributeDetails = attributes;
 
                 generatedTableList.Add(generatedTable);
@@ -406,7 +406,7 @@ namespace RelationalSchemaNormalizerUI
             return generatedTableList;
         }
 
-        private GeneratedTable CreateGeneratedTable(LevelOfNF levelOfNF, TableDetail tableDetail)
+        private async Task<GeneratedTable> CreateGeneratedTable(LevelOfNF levelOfNF, TableDetail tableDetail)
         {
             return new GeneratedTable()
             {
@@ -417,7 +417,7 @@ namespace RelationalSchemaNormalizerUI
             };
         }
 
-        private List<GenTableAttributeDetail> GetAttributesForTable(NormalFormsData data, TableDetail tableDetail, GeneratedTable generatedTable)
+        private async Task<List<GenTableAttributeDetail>> GetAttributesForTable(NormalFormsData data, TableDetail tableDetail, GeneratedTable generatedTable)
         {
             List<GenTableAttributeDetail> attributes = new();
 
@@ -461,7 +461,7 @@ namespace RelationalSchemaNormalizerUI
             return attributes;
         }
 
-        private List<NormalizedTablesInputs> CreateNormalizedTablesInputs(List<GeneratedTable> generatedTables, List<NormalFormsData> tablesData, LevelOfNF levelOfNF)
+        private async Task<List<NormalizedTablesInputs>> CreateNormalizedTablesInputs(List<GeneratedTable> generatedTables, List<NormalFormsData> tablesData, LevelOfNF levelOfNF)
         {
             List<NormalizedTablesInputs> dbDetailsForCreation = new();
 
@@ -495,13 +495,13 @@ namespace RelationalSchemaNormalizerUI
                             .Any(table => table.GenTableAttributeDetails
                                 .Any(attr => attr.KeyAttribute && attr.AttributeName == nonKeyAttr)))
                         .ToList();
-                    List<ForeignKeyDetail> foreignKeyDetails = GetForeignKeyDetails(data, matchingNonKeyAttributes, singleKeyAttributeTables);
+                    List<ForeignKeyDetail> foreignKeyDetails = await GetForeignKeyDetails(data, matchingNonKeyAttributes, singleKeyAttributeTables);
                     var falseCheck = foreignKeyDetails.Where(x => x.ReferencedTable == generatedTable.TableName).ToList();
                     if (falseCheck.Count > 0)
                     {
                         foreignKeyDetails.RemoveAll(x => falseCheck.Contains(x));
                     }
-                    List<ForeignKeyDetail> primaryKeyDetails = GetInitialPriamryKeyDetails(data, singleKeyAttributeTables);
+                    List<ForeignKeyDetail> primaryKeyDetails = await GetInitialPriamryKeyDetails(data, singleKeyAttributeTables);
 
                     dbDetailsForCreation.Add(new NormalizedTablesInputs
                     {
@@ -528,7 +528,7 @@ namespace RelationalSchemaNormalizerUI
             return dbDetailsForCreation;
         }
 
-        private List<ForeignKeyDetail> GetForeignKeyDetails(NormalFormsData data, List<string> matchingNonKeyAttributes, List<GeneratedTable> generatedTables)
+        private async Task<List<ForeignKeyDetail>> GetForeignKeyDetails(NormalFormsData data, List<string> matchingNonKeyAttributes, List<GeneratedTable> generatedTables)
         {
             List<ForeignKeyDetail> foreignKeyDetails = new();
 
@@ -562,7 +562,7 @@ namespace RelationalSchemaNormalizerUI
             return foreignKeyDetails;
         }
 
-        private List<ForeignKeyDetail> GetInitialPriamryKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
+        private async Task<List<ForeignKeyDetail>> GetInitialPriamryKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
         {
             List<ForeignKeyDetail> pKeyDetails = new();
             var origninalPK = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
@@ -641,9 +641,9 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private void CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
+        private async Task CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
         {
-            var createResult = _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
+            var createResult = await _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
             if (!createResult.Status)
             {
                 throw new Exception($"Failed to create table {generatedTable.TableName}: {createResult.Message}");
