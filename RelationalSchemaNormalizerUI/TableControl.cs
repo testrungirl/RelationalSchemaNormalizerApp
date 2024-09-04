@@ -50,12 +50,13 @@ namespace RelationalSchemaNormalizerUI
 
             if (tableDetail?.GeneratedTables?.Count(x => x.LevelOfNF == LevelOfNF.Second) > 0)
             {
-                funcDepenBtn.Visible = true;
+                functDepText.Visible = true;
+                functDepText.Text = tableDetail.Comments;
+
+                funcDepenBtn.Visible = false;
                 threeNFBtn.Visible = true;
                 twoNFBtn.Visible = true;
                 verifyNormalizationBtn.Visible = false;
-                functDepText.Visible = false;
-                functDepText.Text = tableDetail.Comments;
 
             }
             else if (!string.IsNullOrWhiteSpace(tableDetail.Comments))
@@ -256,7 +257,7 @@ namespace RelationalSchemaNormalizerUI
             //TODO: display necessary buttons
         }
 
-        private async void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
+        private async void populatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
         {
             tableLayoutPanel2.Controls.Clear();
 
@@ -280,6 +281,51 @@ namespace RelationalSchemaNormalizerUI
 
             scrollablePanel.Controls.Add(tableLayoutPanel);
             tableLayoutPanel2.Controls.Add(scrollablePanel, 0, 0);
+        }
+        private async void populatePanelWithTables(List<newVM> dataTableObjs)
+        {
+            // Clear any existing controls
+            tableLayoutPanel2.Controls.Clear();
+            TextBox dependencyText = new TextBox
+            {
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                BackColor = SystemColors.GradientInactiveCaption,
+                Location = new Point(1583, 3),
+                Multiline = true,
+                Name = "functDepText",
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Horizontal,
+                Size = new Size(384, 827),
+                TabIndex = 5,
+                Text = tableDetail.Comments,
+                Visible = true,
+            };
+
+            Panel scrollablePanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            TableLayoutPanel tableLayoutPanel = CreateTableLayoutPanel(dataTableObjs.Count);
+
+            for (int i = 0; i < dataTableObjs.Count; i++)
+            {
+                DataTable dataTable = dataTableObjs[i].dataTable;
+                Label label = CreateDataGridLabel(dataTableObjs[i].TableName);
+                DataGridView dgv = CreateDataGridView(dataTable, dataTableObjs[i].KeyAttri);
+
+                tableLayoutPanel.Controls.Add(label, 0, i * 2);
+                tableLayoutPanel.Controls.Add(dgv, 0, i * 2 + 1);
+            }
+
+            scrollablePanel.Controls.Add(tableLayoutPanel);
+
+            tableLayoutPanel2.Controls.Add(scrollablePanel, 0, 0);
+
+            tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
+
         }
 
         private static TableLayoutPanel CreateTableLayoutPanel(int rowCount)
@@ -313,9 +359,20 @@ namespace RelationalSchemaNormalizerUI
                 AutoSize = true
             };
         }
+        private static Label CreateDataGridLabel(string TableName)
+        {
+            return new Label
+            {
+                Text = $"{TableName}",
+                Anchor = AnchorStyles.None,
+                TextAlign = ContentAlignment.MiddleCenter,
+                AutoSize = true
+            };
+        }
 
         private DataGridView CreateDataGridView(DataTable dataTable, List<string> keyAttributes)
         {
+
             DataGridView dgv = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -327,7 +384,9 @@ namespace RelationalSchemaNormalizerUI
                 RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
                 AutoSize = true,
                 BackgroundColor = SystemColors.ButtonHighlight,
-                GridColor = SystemColors.ButtonFace
+                GridColor = SystemColors.ButtonFace,
+
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
             };
 
             dgv.CellPainting += (s, e) => DataGridView_CellPainting(s, e, dgv, keyAttributes);
@@ -581,30 +640,50 @@ namespace RelationalSchemaNormalizerUI
 
         private async void threeNFBtn_Click(object sender, EventArgs e)
         {
-            List<DataTable> generated3NFTables = new();
-            var retrievedSchemaIn3NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
-            foreach (var tableSchema in retrievedSchemaIn3NF)
+            List<newVM> data = new();
+            var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+            foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
                 if (res != null)
                 {
-                    generated3NFTables.Add(res);
+                    var KeyAttri = tableSchema.GenTableAttributeDetails
+                                 .Where(x => x.KeyAttribute)
+                                 .Select(x => x.AttributeName)
+                                 .ToList();
+                    data.Add(new newVM { dataTable = res, KeyAttri = KeyAttri, TableName = tableSchema.TableName });
                 }
             }
+
+            populatePanelWithTables(data);
+            threeNFBtn.Visible = false;
+            twoNFBtn.Visible = true;
+            orignalTable.Visible = true;
         }
 
         private async void twoNFBtn_Click(object sender, EventArgs e)
         {
-            List<DataTable> generated2NFTables = new();
+            List<newVM> data = new();
             var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
             foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
                 if (res != null)
                 {
-                    generated2NFTables.Add(res);
+                    var KeyAttri = tableSchema.GenTableAttributeDetails
+                                 .Where(x => x.KeyAttribute)
+                                 .Select(x => x.AttributeName)
+                                 .ToList();
+                    data.Add(new newVM { dataTable = res, KeyAttri = KeyAttri, TableName = tableSchema.TableName });
                 }
             }
+
+
+            populatePanelWithTables(data);
+            twoNFBtn.Visible = false;
+            threeNFBtn.Visible = true;
+            orignalTable.Visible = true;
+
         }
 
         private async Task HandleNFTableCreationAsync(List<NormalizedTablesInputs> NormalizedTablesInputs)
@@ -655,6 +734,56 @@ namespace RelationalSchemaNormalizerUI
             tableDetail.GeneratedTables.AddRange(tables);
             return await _appDbService.UpdateTable(tableDetail);
         }
+        private class newVM
+        {
+            public DataTable dataTable { get; set; }
+            public string TableName { get; set; }
+            public List<string> KeyAttri { get; set; }
+        }
 
+        private async void orignalTable_Click(object sender, EventArgs e)
+        {
+            DataGridView recordsFromDB = new DataGridView
+            {
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                BackgroundColor = SystemColors.ButtonHighlight,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+                GridColor = SystemColors.ButtonFace,
+                Location = new Point(3, 3),
+                Name = "recordsFromDB",
+                ReadOnly = true,
+                RowHeadersWidth = 62,
+                Size = new Size(1574, 827),
+
+            };
+            TextBox dependencyText = new TextBox
+            {
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                BackColor = SystemColors.GradientInactiveCaption,
+                Location = new Point(1583, 3),
+                Multiline = true,
+                Name = "functDepText",
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Horizontal,
+                Size = new Size(384, 827),
+                TabIndex = 5,
+                Text = tableDetail.Comments,
+                Visible = true,
+
+            };
+
+            tableLayoutPanel2.Controls.Clear();
+            tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
+            tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
+            
+            recordsFromDB.DataSource = originalRecords;
+            recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
+
+            twoNFBtn.Visible = true;
+            threeNFBtn.Visible = true;
+            orignalTable.Visible = false;
+        }
     }
 }
