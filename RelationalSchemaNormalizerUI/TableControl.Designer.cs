@@ -39,6 +39,7 @@
             twoNFBtn = new Button();
             threeNFBtn = new Button();
             verifyNormalizationBtn = new Button();
+            orignalTable = new Button();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)recordsFromDB).BeginInit();
             tableLayoutPanel2.SuspendLayout();
@@ -204,6 +205,21 @@
             verifyNormalizationBtn.Visible = false;
             verifyNormalizationBtn.Click += verifyNormalizationBtn_Click;
             // 
+            // orignalTable
+            // 
+            orignalTable.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            orignalTable.AutoSize = true;
+            orignalTable.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            orignalTable.BackColor = Color.CornflowerBlue;
+            orignalTable.Location = new Point(1501, 1005);
+            orignalTable.Name = "orignalTable";
+            orignalTable.Size = new Size(109, 35);
+            orignalTable.TabIndex = 8;
+            orignalTable.Text = "Initial Table";
+            orignalTable.UseVisualStyleBackColor = false;
+            orignalTable.Visible = false;
+            orignalTable.Click += orignalTable_Click;
+            // 
             // TableControl
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -211,6 +227,7 @@
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
+            Controls.Add(orignalTable);
             Controls.Add(verifyNormalizationBtn);
             Controls.Add(threeNFBtn);
             Controls.Add(twoNFBtn);
@@ -241,5 +258,6 @@
         private Button threeNFBtn;
         private TextBox functDepText;
         private Button verifyNormalizationBtn;
+        private Button orignalTable;
     }
 }

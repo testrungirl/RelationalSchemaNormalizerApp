@@ -50,12 +50,13 @@ namespace RelationalSchemaNormalizerUI
 
             if (tableDetail?.GeneratedTables?.Count(x => x.LevelOfNF == LevelOfNF.Second) > 0)
             {
-                funcDepenBtn.Visible = true;
+                functDepText.Visible = true;
+                functDepText.Text = tableDetail.Comments;
+
+                funcDepenBtn.Visible = false;
                 threeNFBtn.Visible = true;
                 twoNFBtn.Visible = true;
                 verifyNormalizationBtn.Visible = false;
-                functDepText.Visible = false;
-                functDepText.Text = tableDetail.Comments;
 
             }
             else if (!string.IsNullOrWhiteSpace(tableDetail.Comments))
@@ -104,7 +105,7 @@ namespace RelationalSchemaNormalizerUI
             return originalRecords.Data;
         }
 
-        private void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
+        private async void ShowStatus(string message, string caption = "Validation Error", MessageBoxIcon icon = MessageBoxIcon.Error)
         {
             MessageBox.Show(message, caption, MessageBoxButtons.OK, icon);
         }
@@ -198,13 +199,13 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private void PopulateAttributes(DataTable records, List<string> keyAttributes)
+        private async void PopulateAttributes(DataTable records, List<string> keyAttributes)
         {
             recordsFromDB.DataSource = records;
             recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
         }
 
-        private void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
+        private async void DataGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e, DataGridView dataGridView, List<string> keyAttributes)
         {
             if (e.RowIndex == -1 && e.ColumnIndex >= 0)
             {
@@ -215,7 +216,7 @@ namespace RelationalSchemaNormalizerUI
                     Bitmap bitmap;
                     using (var svgStream = new FileStream("./Imgs/key-svgrepo-com.svg", FileMode.Open, FileAccess.Read))
                     {
-                        bitmap = ConvertSvgToBitmap(svgStream, 20, 20);
+                        bitmap = await ConvertSvgToBitmap(svgStream, 20, 20);
                     }
 
                     int imageX = e.CellBounds.Left + 4;
@@ -237,7 +238,7 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private Bitmap ConvertSvgToBitmap(Stream svgStream, int width, int height)
+        private async Task<Bitmap> ConvertSvgToBitmap(Stream svgStream, int width, int height)
         {
             var svgDocument = Svg.SvgDocument.Open<Svg.SvgDocument>(svgStream);
             svgDocument.Width = new SvgUnit(SvgUnitType.Pixel, width);
@@ -256,7 +257,7 @@ namespace RelationalSchemaNormalizerUI
             //TODO: display necessary buttons
         }
 
-        private void PopulatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
+        private async void populatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
         {
             tableLayoutPanel2.Controls.Clear();
 
@@ -280,6 +281,51 @@ namespace RelationalSchemaNormalizerUI
 
             scrollablePanel.Controls.Add(tableLayoutPanel);
             tableLayoutPanel2.Controls.Add(scrollablePanel, 0, 0);
+        }
+        private async void populatePanelWithTables(List<newVM> dataTableObjs)
+        {
+            // Clear any existing controls
+            tableLayoutPanel2.Controls.Clear();
+            TextBox dependencyText = new TextBox
+            {
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                BackColor = SystemColors.GradientInactiveCaption,
+                Location = new Point(1583, 3),
+                Multiline = true,
+                Name = "functDepText",
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Horizontal,
+                Size = new Size(384, 827),
+                TabIndex = 5,
+                Text = tableDetail.Comments,
+                Visible = true,
+            };
+
+            Panel scrollablePanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+            };
+
+            TableLayoutPanel tableLayoutPanel = CreateTableLayoutPanel(dataTableObjs.Count);
+
+            for (int i = 0; i < dataTableObjs.Count; i++)
+            {
+                DataTable dataTable = dataTableObjs[i].dataTable;
+                Label label = CreateDataGridLabel(dataTableObjs[i].TableName);
+                DataGridView dgv = CreateDataGridView(dataTable, dataTableObjs[i].KeyAttri);
+
+                tableLayoutPanel.Controls.Add(label, 0, i * 2);
+                tableLayoutPanel.Controls.Add(dgv, 0, i * 2 + 1);
+            }
+
+            scrollablePanel.Controls.Add(tableLayoutPanel);
+
+            tableLayoutPanel2.Controls.Add(scrollablePanel, 0, 0);
+
+            tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
+
         }
 
         private static TableLayoutPanel CreateTableLayoutPanel(int rowCount)
@@ -313,9 +359,20 @@ namespace RelationalSchemaNormalizerUI
                 AutoSize = true
             };
         }
+        private static Label CreateDataGridLabel(string TableName)
+        {
+            return new Label
+            {
+                Text = $"{TableName}",
+                Anchor = AnchorStyles.None,
+                TextAlign = ContentAlignment.MiddleCenter,
+                AutoSize = true
+            };
+        }
 
         private DataGridView CreateDataGridView(DataTable dataTable, List<string> keyAttributes)
         {
+
             DataGridView dgv = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -327,7 +384,9 @@ namespace RelationalSchemaNormalizerUI
                 RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
                 AutoSize = true,
                 BackgroundColor = SystemColors.ButtonHighlight,
-                GridColor = SystemColors.ButtonFace
+                GridColor = SystemColors.ButtonFace,
+
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
             };
 
             dgv.CellPainting += (s, e) => DataGridView_CellPainting(s, e, dgv, keyAttributes);
@@ -366,12 +425,12 @@ namespace RelationalSchemaNormalizerUI
             if (analysisResult != null)
             {
                 var gen2NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn2NFData, LevelOfNF.Second, tableDetail);
-                var DBDetailsFor2NFCreation = CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
+                var DBDetailsFor2NFCreation = await CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
 
                 await HandleNFTableCreationAsync(DBDetailsFor2NFCreation);
 
                 var gen3NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn3NFData, LevelOfNF.Third, tableDetail);
-                var DBDetailsFor3NFCreation = CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
+                var DBDetailsFor3NFCreation = await CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
 
                 await HandleNFTableCreationAsync(DBDetailsFor3NFCreation);
 
@@ -395,9 +454,9 @@ namespace RelationalSchemaNormalizerUI
 
             foreach (var data in tablesData.OrderBy(nfd => nfd.KeyAttributes.Count).ToList())
             {
-                var generatedTable = CreateGeneratedTable(levelOfNF, tableDetail);
+                var generatedTable = await CreateGeneratedTable(levelOfNF, tableDetail);
 
-                List<GenTableAttributeDetail> attributes = GetAttributesForTable(data, tableDetail, generatedTable);
+                List<GenTableAttributeDetail> attributes = await GetAttributesForTable(data, tableDetail, generatedTable);
                 generatedTable.GenTableAttributeDetails = attributes;
 
                 generatedTableList.Add(generatedTable);
@@ -406,7 +465,7 @@ namespace RelationalSchemaNormalizerUI
             return generatedTableList;
         }
 
-        private GeneratedTable CreateGeneratedTable(LevelOfNF levelOfNF, TableDetail tableDetail)
+        private async Task<GeneratedTable> CreateGeneratedTable(LevelOfNF levelOfNF, TableDetail tableDetail)
         {
             return new GeneratedTable()
             {
@@ -417,7 +476,7 @@ namespace RelationalSchemaNormalizerUI
             };
         }
 
-        private List<GenTableAttributeDetail> GetAttributesForTable(NormalFormsData data, TableDetail tableDetail, GeneratedTable generatedTable)
+        private async Task<List<GenTableAttributeDetail>> GetAttributesForTable(NormalFormsData data, TableDetail tableDetail, GeneratedTable generatedTable)
         {
             List<GenTableAttributeDetail> attributes = new();
 
@@ -461,7 +520,7 @@ namespace RelationalSchemaNormalizerUI
             return attributes;
         }
 
-        private List<NormalizedTablesInputs> CreateNormalizedTablesInputs(List<GeneratedTable> generatedTables, List<NormalFormsData> tablesData, LevelOfNF levelOfNF)
+        private async Task<List<NormalizedTablesInputs>> CreateNormalizedTablesInputs(List<GeneratedTable> generatedTables, List<NormalFormsData> tablesData, LevelOfNF levelOfNF)
         {
             List<NormalizedTablesInputs> dbDetailsForCreation = new();
 
@@ -495,13 +554,13 @@ namespace RelationalSchemaNormalizerUI
                             .Any(table => table.GenTableAttributeDetails
                                 .Any(attr => attr.KeyAttribute && attr.AttributeName == nonKeyAttr)))
                         .ToList();
-                    List<ForeignKeyDetail> foreignKeyDetails = GetForeignKeyDetails(data, matchingNonKeyAttributes, singleKeyAttributeTables);
+                    List<ForeignKeyDetail> foreignKeyDetails = await GetForeignKeyDetails(data, matchingNonKeyAttributes, singleKeyAttributeTables);
                     var falseCheck = foreignKeyDetails.Where(x => x.ReferencedTable == generatedTable.TableName).ToList();
                     if (falseCheck.Count > 0)
                     {
                         foreignKeyDetails.RemoveAll(x => falseCheck.Contains(x));
                     }
-                    List<ForeignKeyDetail> primaryKeyDetails = GetInitialPriamryKeyDetails(data, singleKeyAttributeTables);
+                    List<ForeignKeyDetail> primaryKeyDetails = await GetInitialPriamryKeyDetails(data, singleKeyAttributeTables);
 
                     dbDetailsForCreation.Add(new NormalizedTablesInputs
                     {
@@ -528,7 +587,7 @@ namespace RelationalSchemaNormalizerUI
             return dbDetailsForCreation;
         }
 
-        private List<ForeignKeyDetail> GetForeignKeyDetails(NormalFormsData data, List<string> matchingNonKeyAttributes, List<GeneratedTable> generatedTables)
+        private async Task<List<ForeignKeyDetail>> GetForeignKeyDetails(NormalFormsData data, List<string> matchingNonKeyAttributes, List<GeneratedTable> generatedTables)
         {
             List<ForeignKeyDetail> foreignKeyDetails = new();
 
@@ -562,7 +621,7 @@ namespace RelationalSchemaNormalizerUI
             return foreignKeyDetails;
         }
 
-        private List<ForeignKeyDetail> GetInitialPriamryKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
+        private async Task<List<ForeignKeyDetail>> GetInitialPriamryKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
         {
             List<ForeignKeyDetail> pKeyDetails = new();
             var origninalPK = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
@@ -581,30 +640,50 @@ namespace RelationalSchemaNormalizerUI
 
         private async void threeNFBtn_Click(object sender, EventArgs e)
         {
-            List<DataTable> generated3NFTables = new();
-            var retrievedSchemaIn3NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
-            foreach (var tableSchema in retrievedSchemaIn3NF)
+            List<newVM> data = new();
+            var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+            foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
                 if (res != null)
                 {
-                    generated3NFTables.Add(res);
+                    var KeyAttri = tableSchema.GenTableAttributeDetails
+                                 .Where(x => x.KeyAttribute)
+                                 .Select(x => x.AttributeName)
+                                 .ToList();
+                    data.Add(new newVM { dataTable = res, KeyAttri = KeyAttri, TableName = tableSchema.TableName });
                 }
             }
+
+            populatePanelWithTables(data);
+            threeNFBtn.Visible = false;
+            twoNFBtn.Visible = true;
+            orignalTable.Visible = true;
         }
 
         private async void twoNFBtn_Click(object sender, EventArgs e)
         {
-            List<DataTable> generated2NFTables = new();
+            List<newVM> data = new();
             var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
             foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
                 if (res != null)
                 {
-                    generated2NFTables.Add(res);
+                    var KeyAttri = tableSchema.GenTableAttributeDetails
+                                 .Where(x => x.KeyAttribute)
+                                 .Select(x => x.AttributeName)
+                                 .ToList();
+                    data.Add(new newVM { dataTable = res, KeyAttri = KeyAttri, TableName = tableSchema.TableName });
                 }
             }
+
+
+            populatePanelWithTables(data);
+            twoNFBtn.Visible = false;
+            threeNFBtn.Visible = true;
+            orignalTable.Visible = true;
+
         }
 
         private async Task HandleNFTableCreationAsync(List<NormalizedTablesInputs> NormalizedTablesInputs)
@@ -641,9 +720,9 @@ namespace RelationalSchemaNormalizerUI
             }
         }
 
-        private void CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
+        private async Task CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
         {
-            var createResult = _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
+            var createResult = await _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
             if (!createResult.Status)
             {
                 throw new Exception($"Failed to create table {generatedTable.TableName}: {createResult.Message}");
@@ -655,6 +734,56 @@ namespace RelationalSchemaNormalizerUI
             tableDetail.GeneratedTables.AddRange(tables);
             return await _appDbService.UpdateTable(tableDetail);
         }
+        private class newVM
+        {
+            public DataTable dataTable { get; set; }
+            public string TableName { get; set; }
+            public List<string> KeyAttri { get; set; }
+        }
 
+        private async void orignalTable_Click(object sender, EventArgs e)
+        {
+            DataGridView recordsFromDB = new DataGridView
+            {
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                BackgroundColor = SystemColors.ButtonHighlight,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
+                GridColor = SystemColors.ButtonFace,
+                Location = new Point(3, 3),
+                Name = "recordsFromDB",
+                ReadOnly = true,
+                RowHeadersWidth = 62,
+                Size = new Size(1574, 827),
+
+            };
+            TextBox dependencyText = new TextBox
+            {
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+                BackColor = SystemColors.GradientInactiveCaption,
+                Location = new Point(1583, 3),
+                Multiline = true,
+                Name = "functDepText",
+                ReadOnly = true,
+                ScrollBars = ScrollBars.Horizontal,
+                Size = new Size(384, 827),
+                TabIndex = 5,
+                Text = tableDetail.Comments,
+                Visible = true,
+
+            };
+
+            tableLayoutPanel2.Controls.Clear();
+            tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
+            tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
+            
+            recordsFromDB.DataSource = originalRecords;
+            recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
+
+            twoNFBtn.Visible = true;
+            threeNFBtn.Visible = true;
+            orignalTable.Visible = false;
+        }
     }
 }
