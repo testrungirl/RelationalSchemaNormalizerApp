@@ -34,6 +34,7 @@ namespace RelationalSchemaNormalizerLibrary.ViewModels
     public class NormalizedTablesInputs
     {
         public DataTable DataTable { get; set; }
+        public List<ForeignKeyDetail> PrimaryKeys { get; set; }
         public GeneratedTable GeneratedTable { get; set; }
         public List<ForeignKeyDetail> ForeignKeysDetails { get; set; }
     }

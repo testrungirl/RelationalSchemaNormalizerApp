@@ -3,12 +3,8 @@ using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Services;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using Svg;
-using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using System.Windows.Forms;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RelationalSchemaNormalizerUI
 {
@@ -52,7 +48,17 @@ namespace RelationalSchemaNormalizerUI
             if (originalRecords == null) return;
             keyAttributes = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
 
-            if (!string.IsNullOrWhiteSpace(tableDetail.Comments))
+            if (tableDetail?.GeneratedTables?.Count(x => x.LevelOfNF == LevelOfNF.Second) > 0)
+            {
+                funcDepenBtn.Visible = true;
+                threeNFBtn.Visible = true;
+                twoNFBtn.Visible = true;
+                verifyNormalizationBtn.Visible = false;
+                functDepText.Visible = false;
+                functDepText.Text = tableDetail.Comments;
+
+            }
+            else if (!string.IsNullOrWhiteSpace(tableDetail.Comments))
             {
                 funcDepenBtn.Visible = false;
                 threeNFBtn.Visible = false;
@@ -70,29 +76,7 @@ namespace RelationalSchemaNormalizerUI
                 verifyNormalizationBtn.Visible = false;
             }
 
-            else if (tableDetail.LevelOfNF == LevelOfNF.Third)
-            {
-                funcDepenBtn.Visible = false;
-                twoNFBtn.Visible = false;
-                threeNFBtn.Visible = false;
-                verifyNormalizationBtn.Visible = false;
-                functDepText.Visible = true;
-                functDepText.Text = tableDetail.Comments;
-            }
-            else if (tableDetail.LevelOfNF == LevelOfNF.Second)
-            {
-                funcDepenBtn.Visible = false;
-                threeNFBtn.Visible = true;
-                twoNFBtn.Visible = false;
-                verifyNormalizationBtn.Visible = false;
-            }
-            else if (tableDetail.LevelOfNF == LevelOfNF.First)
-            {
-                funcDepenBtn.Visible = false;
-                threeNFBtn.Visible = true;
-                twoNFBtn.Visible = true;
-                verifyNormalizationBtn.Visible = false;
-            }
+
 
             PopulateAttributes(originalRecords, keyAttributes);
 
@@ -392,11 +376,11 @@ namespace RelationalSchemaNormalizerUI
                 await HandleNFTableCreationAsync(DBDetailsFor3NFCreation);
 
                 //ShowStatus("Successful!", "Success Alert", MessageBoxIcon.Information);
-
+                alert.StatusTextBox.Text = "Tables have been created successfully!";
                 // Close the dialog if successful
-                alert.DialogResult = DialogResult.OK;
 
                 return (DBDetailsFor2NFCreation, gen2NFTableList, DBDetailsFor3NFCreation, gen3NFTableList);
+
             }
             else
             {
@@ -439,14 +423,28 @@ namespace RelationalSchemaNormalizerUI
 
             foreach (var attr in data.KeyAttributes)
             {
-                attributes.Add(new GenTableAttributeDetail
+                var origninalPK = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
+                if (origninalPK.Contains(attr) || (data.KeyAttributes.Count + data.NonKeyAttributes.Count) == 2)
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    AttributeName = attr,
-                    KeyAttribute = true,
-                    DataType = tableDetail.AttributeDetails.FirstOrDefault(x => x.AttributeName == attr).DataType,
-                    GeneratedTableId = generatedTable.Id
-                });
+                    attributes.Add(new GenTableAttributeDetail
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        AttributeName = attr,
+                        KeyAttribute = true,
+                        DataType = tableDetail.AttributeDetails.FirstOrDefault(x => x.AttributeName == attr).DataType,
+                        GeneratedTableId = generatedTable.Id
+                    });
+                }
+                else
+                {
+                    attributes.Add(new GenTableAttributeDetail
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        AttributeName = attr,
+                        DataType = tableDetail.AttributeDetails.FirstOrDefault(x => x.AttributeName == attr).DataType,
+                        GeneratedTableId = generatedTable.Id
+                    });
+                }
             }
 
             foreach (var attr in data.NonKeyAttributes)
@@ -468,66 +466,117 @@ namespace RelationalSchemaNormalizerUI
             List<NormalizedTablesInputs> dbDetailsForCreation = new();
 
             for (int i = 0; i < generatedTables.Count; i++)
-            {// Get the generated table with the fewest key attributes
+            {
                 var generatedTable = generatedTables
                                       .OrderBy(x => x.GenTableAttributeDetails.Count(c => c.KeyAttribute))
                                       .ElementAt(i);
 
-                // Find the corresponding data in tablesData where the key attributes match exactly
-                var data = tablesData
-                    .FirstOrDefault(td => td.KeyAttributes.Count == generatedTable.GenTableAttributeDetails.Count(attr => attr.KeyAttribute) &&
-                                          !td.KeyAttributes.Except(generatedTable.GenTableAttributeDetails
-                                              .Where(attr => attr.KeyAttribute)
-                                              .Select(attr => attr.AttributeName)).Any() &&
-                                          !generatedTable.GenTableAttributeDetails
-                                              .Where(attr => attr.KeyAttribute)
-                                              .Select(attr => attr.AttributeName)
-                                              .Except(td.KeyAttributes).Any());
+                var data = tablesData.FirstOrDefault(td => td.KeyAttributes.Count == generatedTable.GenTableAttributeDetails.Count(attr => attr.KeyAttribute) &&
+                                        !td.KeyAttributes.Except(generatedTable.GenTableAttributeDetails
+                                            .Where(attr => attr.KeyAttribute)
+                                            .Select(attr => attr.AttributeName)).Any() &&
+                                        !generatedTable.GenTableAttributeDetails
+                                            .Where(attr => attr.KeyAttribute)
+                                            .Select(attr => attr.AttributeName)
+                                            .Except(td.KeyAttributes).Any());
 
                 var singleKeyAttributeTables = generatedTables
                                         .Where(x => x.GenTableAttributeDetails.Count(c => c.KeyAttribute) == 1)
                                         .ToList();
 
 
-                if (data.KeyAttributes.Count > 1)
+                if (data.KeyAttributes.Count > 1 || data.NonKeyAttributes
+                    .Any(nonKeyAttr => singleKeyAttributeTables
+                        .Any(table => table.GenTableAttributeDetails
+                            .Any(attr => attr.KeyAttribute && attr.AttributeName == nonKeyAttr))))
                 {
-                    List<ForeignKeyDetail> foreignKeyDetails = GetForeignKeyDetails(data, singleKeyAttributeTables);
+                    var matchingNonKeyAttributes = data.NonKeyAttributes
+                        .Where(nonKeyAttr => singleKeyAttributeTables
+                            .Any(table => table.GenTableAttributeDetails
+                                .Any(attr => attr.KeyAttribute && attr.AttributeName == nonKeyAttr)))
+                        .ToList();
+                    List<ForeignKeyDetail> foreignKeyDetails = GetForeignKeyDetails(data, matchingNonKeyAttributes, singleKeyAttributeTables);
+                    var falseCheck = foreignKeyDetails.Where(x => x.ReferencedTable == generatedTable.TableName).ToList();
+                    if (falseCheck.Count > 0)
+                    {
+                        foreignKeyDetails.RemoveAll(x => falseCheck.Contains(x));
+                    }
+                    List<ForeignKeyDetail> primaryKeyDetails = GetInitialPriamryKeyDetails(data, singleKeyAttributeTables);
+
                     dbDetailsForCreation.Add(new NormalizedTablesInputs
                     {
                         GeneratedTable = generatedTable,
+                        PrimaryKeys = primaryKeyDetails,
                         ForeignKeysDetails = foreignKeyDetails,
                         DataTable = data.DataTable
                     });
                 }
                 else
                 {
+                    // Add to dbDetailsForCreation without foreign or primary keys
                     dbDetailsForCreation.Add(new NormalizedTablesInputs
                     {
                         GeneratedTable = generatedTable,
                         DataTable = data.DataTable,
                         ForeignKeysDetails = new List<ForeignKeyDetail>(),
-
+                        PrimaryKeys = new List<ForeignKeyDetail>()
                     });
                 }
+
             }
 
             return dbDetailsForCreation;
         }
 
-        private List<ForeignKeyDetail> GetForeignKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
+        private List<ForeignKeyDetail> GetForeignKeyDetails(NormalFormsData data, List<string> matchingNonKeyAttributes, List<GeneratedTable> generatedTables)
         {
             List<ForeignKeyDetail> foreignKeyDetails = new();
 
             foreach (var attr in data.KeyAttributes)
             {
-                string foreignKeyTableName = generatedTables.FirstOrDefault(x => x.GenTableAttributeDetails.Any(y => y.AttributeName == attr))?.TableName;
+                string foreignKeyTableName = generatedTables
+                    .FirstOrDefault(x => x.GenTableAttributeDetails.Any(y => y.AttributeName == attr))?.TableName;
+
                 if (!string.IsNullOrEmpty(foreignKeyTableName))
                 {
                     foreignKeyDetails.Add(new ForeignKeyDetail { ColumnName = attr, ReferencedTable = foreignKeyTableName });
                 }
             }
 
+            // Check if any matchingNonKeyAttribute is present in data.KeyAttributes
+            foreach (var matchingAttr in matchingNonKeyAttributes)
+            {
+                if (data.NonKeyAttributes.Contains(matchingAttr))
+                {
+                    string foreignKeyTableName = generatedTables
+                        .FirstOrDefault(x => x.GenTableAttributeDetails.Any(y => y.AttributeName == matchingAttr && x.GenTableAttributeDetails.FirstOrDefault(x => x.AttributeName == matchingAttr).KeyAttribute))?.TableName;
+
+                    if (!string.IsNullOrEmpty(foreignKeyTableName))
+                    {
+                        // Add the matching non-key attribute as a foreign key detail
+                        foreignKeyDetails.Add(new ForeignKeyDetail { ColumnName = matchingAttr, ReferencedTable = foreignKeyTableName });
+                    }
+                }
+            }
+
             return foreignKeyDetails;
+        }
+
+        private List<ForeignKeyDetail> GetInitialPriamryKeyDetails(NormalFormsData data, List<GeneratedTable> generatedTables)
+        {
+            List<ForeignKeyDetail> pKeyDetails = new();
+            var origninalPK = tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName).ToList();
+
+            foreach (var attr in data.KeyAttributes)
+            {
+                string foreignKeyTableName = generatedTables.FirstOrDefault(x => x.GenTableAttributeDetails.Any(y => y.AttributeName == attr && origninalPK.Contains(y.AttributeName)))?.TableName;
+                if (!string.IsNullOrEmpty(foreignKeyTableName))
+                {
+                    pKeyDetails.Add(new ForeignKeyDetail { ColumnName = attr, ReferencedTable = foreignKeyTableName });
+                }
+            }
+
+            return pKeyDetails;
         }
 
         private async void threeNFBtn_Click(object sender, EventArgs e)
@@ -567,14 +616,14 @@ namespace RelationalSchemaNormalizerUI
                     .ToList();
 
                 var multiKeyTables = NormalizedTablesInputs
-                    .Where(x => x.ForeignKeysDetails.Count > 1)
+                    .Where(x => x.ForeignKeysDetails.Count > 0)
                     .ToList();
 
                 foreach (var data in singleKeyTables)
                 {
                     CreateTable(data.GeneratedTable, tableDetail.DatabaseDetail.ConnectionString);
                 }
-                foreach (var data in multiKeyTables)
+                foreach (var data in multiKeyTables.OrderBy(x => x.ForeignKeysDetails.Count))
                 {
                     CreateTable(data.GeneratedTable, tableDetail.DatabaseDetail.ConnectionString, data.ForeignKeysDetails);
                 }
@@ -585,14 +634,14 @@ namespace RelationalSchemaNormalizerUI
                 {
                     _dynamicDbService.InsertRecordsIntoTable(data.GeneratedTable, data.DataTable, tableDetail.DatabaseDetail.ConnectionString);
                 }
-                foreach (var data in multiKeyTables)
+                foreach (var data in multiKeyTables.OrderBy(x => x.ForeignKeysDetails.Count))
                 {
                     _dynamicDbService.InsertRecordsIntoTable(data.GeneratedTable, data.DataTable, tableDetail.DatabaseDetail.ConnectionString);
                 }
             }
         }
 
-        private void CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null)
+        private void CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
         {
             var createResult = _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
             if (!createResult.Status)

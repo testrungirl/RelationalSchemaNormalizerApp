@@ -162,6 +162,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
         private void ProcessTransitiveDependencies(StringBuilder sb, Dictionary<string, List<string>> transitiveDependencies, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, DataTable originalRecords, List<NormalFormsData> datatablesIn3NF)
         {
             List<string> transkeys = new();
+            List<string> initialPkeys = new();
             foreach (var item in transitiveDependencies)
             {
                 sb.AppendLine($"Functional dependency: {item.Key} -> {string.Join(", ", item.Value)} - Transitive dependency");
@@ -180,7 +181,12 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 {
                     transkeys.AddRange(key.Split(','));
                 }
+                foreach (var key in functionalDependencies.Keys)
+                {
+                    initialPkeys.AddRange(key.Split(','));
+                }
                 transkeys = transkeys.Select(k => k.Trim()).Distinct().ToList();
+                initialPkeys = initialPkeys.Select(k => k.Trim()).Distinct().ToList();
             }
             else
             {
@@ -197,8 +203,13 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
                 foreach (var columnName in columnNames)
                 {
-                    if (transkeys.Contains(columnName))
+                    if (initialPkeys.Contains(columnName))
                     {
+                        keyAttributes.Add(columnName);
+                    }
+                    else if (transkeys.Contains(columnName) && columnNames.Count == 2)
+                    {
+
                         keyAttributes.Add(columnName);
                     }
                     else
