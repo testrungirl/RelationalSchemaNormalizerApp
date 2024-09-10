@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             label1 = new Label();
             tableLayoutPanel1 = new TableLayoutPanel();
             tableName = new Label();
@@ -50,7 +52,7 @@
             label1.Anchor = AnchorStyles.Right;
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(776, 29);
+            label1.Location = new Point(717, 29);
             label1.Margin = new Padding(3, 7, 3, 0);
             label1.Name = "label1";
             label1.Size = new Size(94, 38);
@@ -65,7 +67,7 @@
             tableLayoutPanel1.ColumnCount = 3;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50.8149F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 49.1851F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 251F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 367F));
             tableLayoutPanel1.Controls.Add(tableName, 1, 0);
             tableLayoutPanel1.Controls.Add(addRecordFromFileBtn, 2, 0);
             tableLayoutPanel1.Controls.Add(label1, 0, 0);
@@ -81,7 +83,7 @@
             tableName.Anchor = AnchorStyles.Left;
             tableName.AutoSize = true;
             tableName.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            tableName.Location = new Point(876, 29);
+            tableName.Location = new Point(817, 29);
             tableName.Margin = new Padding(3, 7, 3, 0);
             tableName.Name = "tableName";
             tableName.Size = new Size(172, 38);
@@ -91,12 +93,12 @@
             // addRecordFromFileBtn
             // 
             addRecordFromFileBtn.Anchor = AnchorStyles.None;
-            addRecordFromFileBtn.AutoSize = true;
             addRecordFromFileBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             addRecordFromFileBtn.BackColor = Color.CornflowerBlue;
-            addRecordFromFileBtn.Location = new Point(1744, 27);
+            addRecordFromFileBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            addRecordFromFileBtn.Location = new Point(1639, 12);
             addRecordFromFileBtn.Name = "addRecordFromFileBtn";
-            addRecordFromFileBtn.Size = new Size(199, 35);
+            addRecordFromFileBtn.Size = new Size(294, 65);
             addRecordFromFileBtn.TabIndex = 2;
             addRecordFromFileBtn.Text = "Bulk Upload from CSV";
             addRecordFromFileBtn.UseVisualStyleBackColor = false;
@@ -108,12 +110,29 @@
             recordsFromDB.AllowUserToDeleteRows = false;
             recordsFromDB.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             recordsFromDB.BackgroundColor = SystemColors.ButtonHighlight;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = SystemColors.Control;
+            dataGridViewCellStyle5.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            dataGridViewCellStyle5.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.True;
+            recordsFromDB.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
             recordsFromDB.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = SystemColors.Window;
+            dataGridViewCellStyle6.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle6.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
+            recordsFromDB.DefaultCellStyle = dataGridViewCellStyle6;
             recordsFromDB.GridColor = SystemColors.ButtonFace;
             recordsFromDB.Location = new Point(3, 3);
             recordsFromDB.Name = "recordsFromDB";
             recordsFromDB.ReadOnly = true;
             recordsFromDB.RowHeadersWidth = 62;
+            recordsFromDB.RowTemplate.Height = 45;
             recordsFromDB.Size = new Size(1574, 827);
             recordsFromDB.TabIndex = 3;
             // 
@@ -137,6 +156,7 @@
             // 
             functDepText.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             functDepText.BackColor = SystemColors.GradientInactiveCaption;
+            functDepText.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             functDepText.Location = new Point(1583, 3);
             functDepText.Multiline = true;
             functDepText.Name = "functDepText";
@@ -152,9 +172,10 @@
             funcDepenBtn.AutoSize = true;
             funcDepenBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             funcDepenBtn.BackColor = Color.CornflowerBlue;
-            funcDepenBtn.Location = new Point(1339, 1005);
+            funcDepenBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            funcDepenBtn.Location = new Point(636, 999);
             funcDepenBtn.Name = "funcDepenBtn";
-            funcDepenBtn.Size = new Size(271, 35);
+            funcDepenBtn.Size = new Size(385, 42);
             funcDepenBtn.TabIndex = 4;
             funcDepenBtn.Text = "Check Functional Dependencies";
             funcDepenBtn.UseVisualStyleBackColor = false;
@@ -166,11 +187,12 @@
             twoNFBtn.AutoSize = true;
             twoNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             twoNFBtn.BackColor = Color.CornflowerBlue;
-            twoNFBtn.Location = new Point(1643, 1005);
+            twoNFBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            twoNFBtn.Location = new Point(304, 999);
             twoNFBtn.Name = "twoNFBtn";
-            twoNFBtn.Size = new Size(175, 35);
+            twoNFBtn.Size = new Size(275, 42);
             twoNFBtn.TabIndex = 5;
-            twoNFBtn.Text = "View 2nd NF Tables";
+            twoNFBtn.Text = "View Tables in 2nd NF";
             twoNFBtn.UseVisualStyleBackColor = false;
             twoNFBtn.Visible = false;
             twoNFBtn.Click += twoNFBtn_Click;
@@ -181,11 +203,12 @@
             threeNFBtn.AutoSize = true;
             threeNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             threeNFBtn.BackColor = Color.CornflowerBlue;
-            threeNFBtn.Location = new Point(1859, 1005);
+            threeNFBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            threeNFBtn.Location = new Point(1605, 999);
             threeNFBtn.Name = "threeNFBtn";
-            threeNFBtn.Size = new Size(171, 35);
+            threeNFBtn.Size = new Size(277, 42);
             threeNFBtn.TabIndex = 6;
-            threeNFBtn.Text = "View 3rd NF Tables";
+            threeNFBtn.Text = "View Tables in 3rd NF ";
             threeNFBtn.UseVisualStyleBackColor = false;
             threeNFBtn.Visible = false;
             threeNFBtn.Click += threeNFBtn_Click;
@@ -196,11 +219,12 @@
             verifyNormalizationBtn.AutoSize = true;
             verifyNormalizationBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             verifyNormalizationBtn.BackColor = Color.CornflowerBlue;
-            verifyNormalizationBtn.Location = new Point(1643, 1005);
+            verifyNormalizationBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            verifyNormalizationBtn.Location = new Point(1283, 999);
             verifyNormalizationBtn.Name = "verifyNormalizationBtn";
-            verifyNormalizationBtn.Size = new Size(147, 35);
+            verifyNormalizationBtn.Size = new Size(209, 42);
             verifyNormalizationBtn.TabIndex = 7;
-            verifyNormalizationBtn.Text = "Normalize Table\r\n";
+            verifyNormalizationBtn.Text = "Normalize Table";
             verifyNormalizationBtn.UseVisualStyleBackColor = false;
             verifyNormalizationBtn.Visible = false;
             verifyNormalizationBtn.Click += verifyNormalizationBtn_Click;
@@ -211,9 +235,10 @@
             orignalTable.AutoSize = true;
             orignalTable.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             orignalTable.BackColor = Color.CornflowerBlue;
-            orignalTable.Location = new Point(1501, 1005);
+            orignalTable.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            orignalTable.Location = new Point(1075, 999);
             orignalTable.Name = "orignalTable";
-            orignalTable.Size = new Size(109, 35);
+            orignalTable.Size = new Size(157, 42);
             orignalTable.TabIndex = 8;
             orignalTable.Text = "Initial Table";
             orignalTable.UseVisualStyleBackColor = false;

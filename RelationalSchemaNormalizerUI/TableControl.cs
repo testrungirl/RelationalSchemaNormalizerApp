@@ -121,13 +121,8 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     if (!string.IsNullOrEmpty(textFile))
-                    {
-                        modalForm.StatusPanel.Text = "Uploading...";
-                        modalForm.StatusPanel.Text = await UploadFileAndSaveRecordsAsync();
-                    }
-                    else
-                    {
-                        modalForm.StatusPanel.Text = "Please select a file before uploading.";
+                    {                        
+                        UploadFileAndSaveRecordsAsync();
                     }
                 }
 
@@ -161,41 +156,40 @@ namespace RelationalSchemaNormalizerUI
                 }
                 else
                 {
-                    modalForm.StatusPanel.Text = "No file selected.";
+                    ShowStatus("No file selected");
                 }
             };
 
             return modalForm;
         }
 
-        private async Task<string> UploadFileAndSaveRecordsAsync()
+        private async void UploadFileAndSaveRecordsAsync()
         {
             try
             {
                 var tableDetail = await GetTableDetailAsync(tableName.Text, _databaseName);
-                if (tableDetail == null) return "Could not retrieve Table from Database";
+                if (tableDetail == null) ShowStatus("Could not retrieve Table from Database", "Database Error");
 
                 var readFile = await _dynamicDbService.ImportDataFromFile(tableDetail, textFile);
                 if (!readFile.Status)
                 {
-                    return readFile.Message;
+                    ShowStatus($"{readFile.Message}");
                 }
 
                 var saveRecords = await _dynamicDbService.InsertRecordsIntoTable(tableDetail, readFile.Data);
                 if (!saveRecords.Status)
                 {
-                    return saveRecords.Message;
+                    ShowStatus($"{saveRecords.Message}", "Database Error");
                 }
 
                 originalRecords = await GetOriginalRecordsAsync(tableDetail);
-                if (originalRecords == null) return "No data retrieved";
 
                 PopulateAttributes(originalRecords, keyAttributes);
-                return "Records retrieved successfully!";
+                ShowStatus("Records added successfully!", "Success", MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                return $"Error: {ex.Message}";
+                ShowStatus($"{ex.Message}", "Database Error");
             }
         }
 
@@ -255,6 +249,8 @@ namespace RelationalSchemaNormalizerUI
             tableDetail.Comments = functDepText.Text.Trim();
             _appDbService.UpdateTable(tableDetail);
             //TODO: display necessary buttons
+            verifyNormalizationBtn.Visible = true;
+            funcDepenBtn.Visible = false;
         }
 
         private async void populatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
@@ -406,18 +402,18 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     var outputs = await HandleNormalization(alert);
-
-
-                }
-                else
-                {
-                    alert.StatusTextBox.Text = "An error occurred";
+                    if (outputs.status)
+                    {
+                        twoNFBtn.Visible = true;
+                        threeNFBtn.Visible = true;
+                        verifyNormalizationBtn.Visible = false;
+                    }
                 }
             }
             while (result != DialogResult.Cancel);
         }
 
-        private async Task<(List<NormalizedTablesInputs> DBDetailsFor2NFCreation, List<GeneratedTable> gen2NFTableList, List<NormalizedTablesInputs> DBDetailsFor3NFCreation, List<GeneratedTable> gen3NFTableList)> HandleNormalization(ConfirmationAlert alert)
+        private async Task<(List<NormalizedTablesInputs> DBDetailsFor2NFCreation, List<GeneratedTable> gen2NFTableList, List<NormalizedTablesInputs> DBDetailsFor3NFCreation, List<GeneratedTable> gen3NFTableList, bool status)> HandleNormalization(ConfirmationAlert alert)
         {
             var sb = new StringBuilder();
             var analysisResult = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords, true);
@@ -433,18 +429,16 @@ namespace RelationalSchemaNormalizerUI
                 var DBDetailsFor3NFCreation = await CreateNormalizedTablesInputs(gen3NFTableList, analysisResult.TablesIn3NFData, LevelOfNF.Third);
 
                 await HandleNFTableCreationAsync(DBDetailsFor3NFCreation);
+                await Task.Delay(15000);
+                ShowStatus("Tables have been created successfully!!", "Success", MessageBoxIcon.Information);
 
-                //ShowStatus("Successful!", "Success Alert", MessageBoxIcon.Information);
-                alert.StatusTextBox.Text = "Tables have been created successfully!";
-                // Close the dialog if successful
-
-                return (DBDetailsFor2NFCreation, gen2NFTableList, DBDetailsFor3NFCreation, gen3NFTableList);
+                return (DBDetailsFor2NFCreation, gen2NFTableList, DBDetailsFor3NFCreation, gen3NFTableList, true);
 
             }
             else
             {
-                alert.StatusTextBox.Text = "No analysis result found.";
-                return (null, null, null, null);
+                ShowStatus("No analysis result found");
+                return (null, null, null, null, false);
             }
         }
 

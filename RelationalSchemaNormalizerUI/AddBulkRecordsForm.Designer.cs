@@ -32,35 +32,37 @@
             fileInput = new TextBox();
             addRecords = new Button();
             closeModalBtn = new Button();
-            statusPanel = new TextBox();
             SuspendLayout();
             // 
             // label1
             // 
             label1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             label1.AutoSize = true;
-            label1.Location = new Point(23, 119);
+            label1.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            label1.Location = new Point(12, 86);
             label1.Name = "label1";
-            label1.Size = new Size(127, 25);
+            label1.Size = new Size(180, 32);
             label1.TabIndex = 0;
             label1.Text = "Select *csv File";
             // 
             // fileInput
             // 
             fileInput.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            fileInput.Location = new Point(226, 113);
+            fileInput.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            fileInput.Location = new Point(226, 86);
             fileInput.Name = "fileInput";
             fileInput.ReadOnly = true;
-            fileInput.Size = new Size(550, 31);
+            fileInput.Size = new Size(550, 39);
             fileInput.TabIndex = 1;
             // 
             // addRecords
             // 
             addRecords.BackColor = Color.CornflowerBlue;
             addRecords.DialogResult = DialogResult.Yes;
-            addRecords.Location = new Point(470, 179);
+            addRecords.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            addRecords.Location = new Point(348, 169);
             addRecords.Name = "addRecords";
-            addRecords.Size = new Size(170, 34);
+            addRecords.Size = new Size(249, 44);
             addRecords.TabIndex = 2;
             addRecords.Text = "Upload records";
             addRecords.UseVisualStyleBackColor = false;
@@ -69,32 +71,19 @@
             // 
             closeModalBtn.BackColor = Color.Red;
             closeModalBtn.DialogResult = DialogResult.Cancel;
-            closeModalBtn.Location = new Point(664, 179);
+            closeModalBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            closeModalBtn.Location = new Point(652, 173);
             closeModalBtn.Name = "closeModalBtn";
-            closeModalBtn.Size = new Size(112, 34);
+            closeModalBtn.Size = new Size(124, 40);
             closeModalBtn.TabIndex = 3;
             closeModalBtn.Text = "Close";
             closeModalBtn.UseVisualStyleBackColor = false;
-            // 
-            // statusPanel
-            // 
-            statusPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            statusPanel.BackColor = SystemColors.Control;
-            statusPanel.BorderStyle = BorderStyle.None;
-            statusPanel.Location = new Point(44, 12);
-            statusPanel.Multiline = true;
-            statusPanel.Name = "statusPanel";
-            statusPanel.ReadOnly = true;
-            statusPanel.ScrollBars = ScrollBars.Vertical;
-            statusPanel.Size = new Size(732, 72);
-            statusPanel.TabIndex = 4;
             // 
             // AddBulkRecordsForm
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(841, 247);
-            Controls.Add(statusPanel);
             Controls.Add(closeModalBtn);
             Controls.Add(addRecords);
             Controls.Add(fileInput);
@@ -111,6 +100,5 @@
         private TextBox fileInput;
         private Button addRecords;
         private Button closeModalBtn;
-        private TextBox statusPanel;
     }
 }
