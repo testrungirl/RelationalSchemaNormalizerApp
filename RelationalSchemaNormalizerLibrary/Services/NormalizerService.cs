@@ -77,109 +77,91 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 )
                 .ToDictionary(group => group.Key, group => group.ToList());
         }
-        public Dictionary<string, List<string>> FindTransitiveDependencies(List<string> nonKeyAttributes, List<AttributeDetail> attributes, DataTable dataTable)
+        public Dictionary<string, List<string>> FindTransitiveDependencies(List<string> nonKeyAttributes, DataTable dataTable)
         {
-            // Step 2: Initialize a dictionary to store dependencies
             var dependencies = new Dictionary<string, List<string>>();
 
-            // Step 3: Check dependency for each pair of non-key attributes
-            for (int i = nonKeyAttributes.Count - 1; i >= 0; i--)
+            for (int i = 0; i < nonKeyAttributes.Count; i++)
             {
                 var A = nonKeyAttributes[i];
-                for (int j = nonKeyAttributes.Count - 2; j >= 0; j--)
+                for (int j = i + 1; j < nonKeyAttributes.Count; j++)
                 {
                     var B = nonKeyAttributes[j];
-                    if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
-                        continue; // Skip if A == B or B is already known to depend on A
 
-                    // Step 4: Check if B depends on A
-                    if (CheckBidirectionalDependency(A, B, dataTable))
+                    // Skip if A == B or B already depends on A
+                    if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
+                        continue;
+
+                    // Check if B depends on A and if the pair occurs more than once
+                    if (CheckDependency(A, B, dataTable) && PairOccursMoreThanOnce(A, B, dataTable))
                     {
                         if (!dependencies.ContainsKey(A))
                         {
                             dependencies[A] = new List<string>();
                         }
-
                         dependencies[A].Add(B); // Record dependency
                     }
                 }
             }
-
             return dependencies;
         }
 
-        private static bool CheckBidirectionalDependency(string A, string B, DataTable dataTable)
+        // Check if A consistently determines B
+        private bool CheckDependency(string A, string B, DataTable dataTable)
         {
-            // Step 1: Check if B consistently depends on A, and A consistently depends on B
             var aToBMap = new Dictionary<string, string>();
-            var bToAMap = new Dictionary<string, string>();
-            var aCounts = new Dictionary<string, int>();
-            var bCounts = new Dictionary<string, int>();
 
             foreach (DataRow row in dataTable.Rows)
             {
-                string aValue = row[A].ToString();
-                string bValue = row[B].ToString();
+                string aValue = row[A]?.ToString();
+                string bValue = row[B]?.ToString();
 
-                // Track the occurrences of A and B values
-                if (aCounts.ContainsKey(aValue))
-                {
-                    aCounts[aValue]++;
-                }
-                else
-                {
-                    aCounts[aValue] = 1;
-                }
+                if (aValue == null || bValue == null)
+                    continue;
 
-                if (bCounts.ContainsKey(bValue))
-                {
-                    bCounts[bValue]++;
-                }
-                else
-                {
-                    bCounts[bValue] = 1;
-                }
-
-                // Check mapping from A to B
+                // Check if A consistently maps to only one B
                 if (aToBMap.ContainsKey(aValue))
                 {
                     if (aToBMap[aValue] != bValue)
                     {
-                        return false; // Inconsistent mapping found: A does not consistently map to the same B
+                        return false; // Inconsistent mapping found
                     }
                 }
                 else
                 {
                     aToBMap[aValue] = bValue;
                 }
+            }
 
-                // Check mapping from B to A
-                if (bToAMap.ContainsKey(bValue))
+            return true;
+        }
+
+        // Check if the pair (A, B) occurs more than once
+        private bool PairOccursMoreThanOnce(string A, string B, DataTable dataTable)
+        {
+            var pairCount = new Dictionary<(string aValue, string bValue), int>();
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                string aValue = row[A]?.ToString();
+                string bValue = row[B]?.ToString();
+
+                if (aValue == null || bValue == null)
+                    continue;
+
+                // Increment the count for the (A -> B) pair
+                var key = (aValue, bValue);
+                if (!pairCount.TryAdd(key, 1)) // TryAdd returns false if the key exists
                 {
-                    if (bToAMap[bValue] != aValue)
+                    pairCount[key]++;
+                    if (pairCount[key] > 1)
                     {
-                        return false; // Inconsistent mapping found: B does not consistently map to the same A
+                        return true; // Return immediately when pair occurs more than once
                     }
                 }
-                else
-                {
-                    bToAMap[bValue] = aValue;
-                }
             }
 
-            // Step 2: Ensure that each unique A value has multiple occurrences and each unique B value has multiple occurrences
-            foreach (var count in aCounts.Values)
-            {
-                if (count <= 1) return false;
-            }
-
-            foreach (var count in bCounts.Values)
-            {
-                if (count <= 1) return false;
-            }
-
-            // If all checks pass, then we have a bidirectional dependency
-            return true;
+            return false;
         }
         public ReturnData<List<DataTable>> RestructureTableToNormalForm(Dictionary<string, List<string>> dependencies, DataTable records)
         {
