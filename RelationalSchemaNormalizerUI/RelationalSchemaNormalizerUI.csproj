@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Imgs\key-svgrepo-com.svg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
