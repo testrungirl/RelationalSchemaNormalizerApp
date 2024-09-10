@@ -29,10 +29,10 @@ namespace RelationalSchemaNormalizerLibrary.Services
             List<string> CheckForTransitiveDependency = [];
             foreach (var key in functionalDependencies)
             {
-                if (key.Value.Count > 1) { 
-                    
+                if (key.Value.Count > 1) {
+
                     CheckForTransitiveDependency.AddRange(key.Value);
-                    
+
                 }
             }
             var nonKeyAttributeNames = tableDetail.AttributeDetails

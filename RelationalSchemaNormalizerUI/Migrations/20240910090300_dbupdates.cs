@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RelationalSchemaNormalizerUI.Migrations
 {
     /// <inheritdoc />
-    public partial class addedTimeSnapForAttribiteCreation : Migration
+    public partial class dbupdates : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

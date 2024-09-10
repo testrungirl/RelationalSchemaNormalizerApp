@@ -27,7 +27,7 @@
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
         public LevelOfNF LevelOfNF { get; set; }
-
+       
     }
     public class AttributeDetail
     {

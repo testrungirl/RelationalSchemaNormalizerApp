@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RelationalSchemaNormalizerLibrary.Models;
+using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 
 #nullable disable
 
 namespace RelationalSchemaNormalizerUI.Migrations
 {
-    [DbContext(typeof(RelationalSchemaNormalizerLibrary.Models.AppContext))]
-    [Migration("20240906134643_addedTimeSnapForAttribiteCreation")]
-    partial class addedTimeSnapForAttribiteCreation
+    [DbContext(typeof(AppContext))]
+    [Migration("20240910091411_initialcreate")]
+    partial class initialcreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
