@@ -37,6 +37,7 @@
         public bool KeyAttribute { get; set; }
         public string TableDetailId { get; set; }
         public TableDetail TableDetail { get; set; }
+        public DateTime DateCreated { get; set; }
     }
     public class GenTableAttributeDetail
     {
