@@ -103,7 +103,6 @@ namespace RelationalSchemaNormalizerLibrary.Services
                     }
                 }
             }
-
             return dependencies;
         }
 
@@ -164,11 +163,6 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
             return false;
         }
-
-
-
-
-
         public ReturnData<List<DataTable>> RestructureTableToNormalForm(Dictionary<string, List<string>> dependencies, DataTable records)
         {
             if (dependencies is null)
