@@ -95,7 +95,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                                             .ThenInclude(x => x.AttributeDetails)
                                             .FirstOrDefaultAsync(x => x.DataBaseName.ToLower() == DatabaseName.ToLower());
 
-                return new ReturnData<DatabaseDetail> { Data = database, Status = (database == null) };
+                return new ReturnData<DatabaseDetail> { Data = database, Status = !(database == null) };
 
             }
             catch (Exception ex)
@@ -121,45 +121,6 @@ namespace RelationalSchemaNormalizerLibrary.Services
             {
                 return new ReturnData<bool> { Message = $"Error: {ex.Message}", Status = false };
             }
-
-        }
-        public async Task<ReturnData<bool>> AddGeneratedTableToTableDetail(DatabaseDetail databaseDetail, TableDetail tableDetail, GeneratedTable generatedTable, List<GenTableAttributeDetail> attributeDetails)
-        {
-            try
-            {
-                // Step 1: Add attributes to the GeneratedTable
-                generatedTable.GenTableAttributeDetails.AddRange(attributeDetails);
-
-                // Step 2: Add the GeneratedTable to the TableDetail
-                tableDetail.GeneratedTables.Add(generatedTable);
-
-                // Step 3: Update the DatabaseDetail
-                var existingTableDetail = databaseDetail.TablesDetails.FirstOrDefault(t => t.Id == tableDetail.Id);
-                if (existingTableDetail != null)
-                {
-                    existingTableDetail.GeneratedTables.Add(generatedTable);
-                }
-                else
-                {
-                    return new ReturnData<bool> { Message = "TableDetail not found in DatabaseDetail.", Status = false };
-                }
-
-                //// If GeneratedTable is new, add it to the context
-                //_appContext.GeneratedTables.Add(generatedTable);
-
-                // If TableDetail is not being tracked, update it in the context
-                _appContext.Update(existingTableDetail);
-
-                // Save changes to the database
-                await _appContext.SaveChangesAsync();
-
-                return new ReturnData<bool> { Message = "Generated Table and Attributes added successfully!", Status = true };
-            }
-            catch (Exception ex)
-            {
-                return new ReturnData<bool> { Message = $"Error: {ex.Message}", Status = false };
-            }
-            
 
         }
         public async Task<ReturnData<TableDetail>> UpdateTable(TableDetail tableDetail)
