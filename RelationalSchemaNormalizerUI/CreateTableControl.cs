@@ -57,32 +57,28 @@ namespace RelationalSchemaNormalizerUI
 
         private void dataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            // Check if the current cell is in Column2 (Data Type) or Column3 (Key Attribute)
             if (dataGridView1.CurrentCell.ColumnIndex == 1 || dataGridView1.CurrentCell.ColumnIndex == 2)
             {
                 ComboBox comboBox = e.Control as ComboBox;
 
                 if (comboBox != null)
                 {
-                    // Clear any existing items
                     comboBox.Items.Clear();
 
                     if (dataGridView1.CurrentCell.ColumnIndex == 1)
                     {
-                        // Populate ComboBox for Column2 with data types
                         comboBox.Items.AddRange(new string[] { "string", "boolean", "char", "datetime", "double", "float", "guid", "int" });
                     }
                     else if (dataGridView1.CurrentCell.ColumnIndex == 2)
                     {
-                        // Populate ComboBox for Column3 with true/false options
                         comboBox.Items.AddRange(new string[] { "true", "false" });
                     }
-
-                    // Set the drop-down style to DropDownList
                     comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
                 }
             }
         }
+
+
         private void dataGridView1_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
         {
             DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
@@ -153,7 +149,7 @@ namespace RelationalSchemaNormalizerUI
             // Check if the DataGridView has any populated rows
             if (dataGridView1.Rows.Cast<DataGridViewRow>().All(row => row.IsNewRow))
             {
-                ShowStatus("The table must contain at least one row with data.");
+                ShowStatus("The Table must contain at least one attribute.");
                 return;
             }
 
@@ -168,12 +164,25 @@ namespace RelationalSchemaNormalizerUI
             var attributeDetails = new List<AttributeDetail>();
 
             // Validate and collect data from DataGridView rows
+            DateTime currentTime = DateTime.Now;
+            int i = 0;
+
             foreach (var row in dataGridView1.Rows.Cast<DataGridViewRow>().Where(row => !row.IsNewRow))
             {
-                // Ensure all cells in the row are populated
-                if (row.Cells.Cast<DataGridViewCell>().Any(cell => string.IsNullOrWhiteSpace(cell.Value?.ToString())))
+                // Ensure all cells in the row are populated and show specific messages based on the column
+                if (string.IsNullOrWhiteSpace(row.Cells[0].Value?.ToString()))
                 {
-                    ShowStatus("All cells in each row must be populated.");
+                    ShowStatus("All attributes are required.");
+                    return;
+                }
+                else if (string.IsNullOrWhiteSpace(row.Cells[1].Value?.ToString()))
+                {
+                    ShowStatus("All data type fields are required.");
+                    return;
+                }
+                else if (string.IsNullOrWhiteSpace(row.Cells[2].Value?.ToString()))
+                {
+                    ShowStatus("All key fields are required.");
                     return;
                 }
 
@@ -188,14 +197,19 @@ namespace RelationalSchemaNormalizerUI
                     return;
                 }
 
+                // Add to attribute details list
                 attributeDetails.Add(new AttributeDetail
                 {
                     Id = Guid.NewGuid().ToString(),
                     AttributeName = attributeName,
                     DataType = dataType,
-                    KeyAttribute = keyAttribute
+                    KeyAttribute = keyAttribute,
+                    DateCreated = currentTime.AddMinutes(i),
                 });
+
+                i++;
             }
+
 
             if (!attributeDetails.Any(x => x.KeyAttribute))
             {
@@ -226,7 +240,7 @@ namespace RelationalSchemaNormalizerUI
             var newTable = await _appDBService.GetTable(tableDetail.TableName, _databaseName);
             if (!newTable.Status)
             {
-                ShowStatus(newTable.Message, "Table Creation Error");
+                ShowStatus(newTable.Message, "Table retrieval Error");
                 return;
             }
 
@@ -234,10 +248,10 @@ namespace RelationalSchemaNormalizerUI
             var response = await _dynamicDBService.SaveAndCreateDatabase(tableDetail);
             if (!response.Status)
             {
-                ShowStatus(response.Message, "Table Creation Error");
+                ShowStatus(response.Message, "Database Creation Error");
                 return;
             }
-            ShowStatus("Successfully created Table with attributes in DB", "Success Message", MessageBoxIcon.Information);
+            ShowStatus("Successfully created the Table with attributes in DB", "Success Message", MessageBoxIcon.Information);
             ClearDataGridViewCells();
             tableName.Text = "";
         }

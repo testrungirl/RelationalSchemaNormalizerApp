@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RelationalSchemaNormalizerLibrary.Models;
 using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
@@ -12,9 +13,11 @@ using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 namespace RelationalSchemaNormalizerUI.Migrations
 {
     [DbContext(typeof(AppContext))]
-    partial class AppContextModelSnapshot : ModelSnapshot
+    [Migration("20240910090300_dbupdates")]
+    partial class dbupdates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -16,11 +16,6 @@ namespace RelationalSchemaNormalizerUI
         {
             InitializeComponent();
         }
-        public TextBox StatusTextBox
-        {
-            get { return statusTextBox; }
-            set { statusTextBox = value; }
-        }
 
     }
 }

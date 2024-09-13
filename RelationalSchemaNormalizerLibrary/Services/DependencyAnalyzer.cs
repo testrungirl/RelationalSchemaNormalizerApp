@@ -23,16 +23,27 @@ namespace RelationalSchemaNormalizerLibrary.Services
             List<NormalFormsData> datatablesIn3NF = new List<NormalFormsData>();
 
 
-            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName))}");
+            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
             sb.AppendLine();
-            var functionalDependencies = _normalizerService.FindPartialDependencies(tableDetail.AttributeDetails, originalRecords).Data;
+            var functionalDependencies = _normalizerService.FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x=>x.DateCreated).ToList(), originalRecords).Data;
+            List<string> CheckForTransitiveDependency = [];
+            foreach (var key in functionalDependencies)
+            {
+                if (key.Value.Count > 1) {
+
+                    CheckForTransitiveDependency.AddRange(key.Value);
+
+                }
+            }
             var nonKeyAttributeNames = tableDetail.AttributeDetails
                 .Where(attribute => !attribute.KeyAttribute)
+                .OrderBy(x=>x.DateCreated)
                 .Select(attribute => attribute.AttributeName)
                 .ToList();
 
-            var transitiveDependencies = _normalizerService.FindTransitiveDependencies(nonKeyAttributeNames, tableDetail.AttributeDetails, originalRecords);
-            var allFunctionalDependenciesDatatable = _normalizerService.FindPartialDependencies(tableDetail.AttributeDetails, originalRecords, true).Data;
+
+            var transitiveDependencies = _normalizerService.FindTransitiveDependencies(CheckForTransitiveDependency, originalRecords);
+            var allFunctionalDependenciesDatatable = _normalizerService.FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x=>x.DateCreated).ToList(), originalRecords, true).Data;
 
             LevelOfNF levelOfNF = DetermineNormalForm(sb, functionalDependencies, transitiveDependencies);
             if (createNormalizedTables)

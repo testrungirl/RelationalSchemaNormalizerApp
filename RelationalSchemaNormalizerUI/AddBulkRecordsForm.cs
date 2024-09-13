@@ -21,12 +21,6 @@ namespace RelationalSchemaNormalizerUI
         {
             get { return fileInput; }
             set { fileInput = value; }
-        }
-        public TextBox StatusPanel
-        {
-            get { return statusPanel; }
-            set { statusPanel = value; }
-        
-        }
+        }       
     }
 }
