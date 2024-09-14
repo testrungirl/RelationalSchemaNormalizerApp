@@ -39,20 +39,17 @@
             label2 = new Label();
             tableName = new TextBox();
             createTableBtn = new Button();
-            StatusStrip1 = new StatusStrip();
-            systemStatus = new ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
-            StatusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // label1
             // 
             label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Font = new Font("Segoe UI", 36F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label1.Location = new Point(821, 47);
             label1.Name = "label1";
-            label1.Size = new Size(245, 38);
+            label1.Size = new Size(631, 96);
             label1.TabIndex = 0;
             label1.Text = "Create New Table";
             // 
@@ -63,7 +60,7 @@
             dataGridView1.BackgroundColor = SystemColors.ButtonHighlight;
             dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = SystemColors.Control;
-            dataGridViewCellStyle1.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
             dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
             dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
@@ -73,18 +70,18 @@
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { Column1, Column2, Column3 });
             dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = SystemColors.Window;
-            dataGridViewCellStyle2.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            dataGridViewCellStyle2.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
             dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
             dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
             dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
             dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
             dataGridView1.GridColor = SystemColors.ButtonFace;
-            dataGridView1.Location = new Point(226, 219);
+            dataGridView1.Location = new Point(226, 266);
             dataGridView1.Name = "dataGridView1";
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = SystemColors.Control;
-            dataGridViewCellStyle3.Font = new Font("Segoe UI", 12F);
+            dataGridViewCellStyle3.Font = new Font("Segoe UI", 14F);
             dataGridViewCellStyle3.ForeColor = SystemColors.WindowText;
             dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
             dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
@@ -122,10 +119,10 @@
             // 
             label2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            label2.Location = new Point(226, 160);
+            label2.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            label2.Location = new Point(227, 185);
             label2.Name = "label2";
-            label2.Size = new Size(162, 32);
+            label2.Size = new Size(188, 38);
             label2.TabIndex = 2;
             label2.Text = "Table Name: ";
             label2.TextAlign = ContentAlignment.BottomCenter;
@@ -133,10 +130,10 @@
             // tableName
             // 
             tableName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            tableName.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            tableName.Location = new Point(419, 154);
+            tableName.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            tableName.Location = new Point(420, 179);
             tableName.Name = "tableName";
-            tableName.Size = new Size(537, 39);
+            tableName.Size = new Size(537, 45);
             tableName.TabIndex = 3;
             tableName.Validating += tableName_Validating;
             // 
@@ -146,32 +143,14 @@
             createTableBtn.AutoSize = true;
             createTableBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             createTableBtn.BackColor = Color.CornflowerBlue;
-            createTableBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            createTableBtn.Location = new Point(1379, 939);
+            createTableBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            createTableBtn.Location = new Point(1327, 980);
             createTableBtn.Name = "createTableBtn";
-            createTableBtn.Size = new Size(342, 42);
+            createTableBtn.Size = new Size(394, 48);
             createTableBtn.TabIndex = 4;
             createTableBtn.Text = "Create Table with Attributes";
             createTableBtn.UseVisualStyleBackColor = false;
             createTableBtn.Click += createTableBtn_Click;
-            // 
-            // StatusStrip1
-            // 
-            StatusStrip1.BackColor = SystemColors.ActiveCaption;
-            StatusStrip1.ImageScalingSize = new Size(24, 24);
-            StatusStrip1.Items.AddRange(new ToolStripItem[] { systemStatus });
-            StatusStrip1.Location = new Point(0, 1108);
-            StatusStrip1.Name = "StatusStrip1";
-            StatusStrip1.Size = new Size(2198, 39);
-            StatusStrip1.TabIndex = 5;
-            StatusStrip1.Text = "Ready";
-            // 
-            // systemStatus
-            // 
-            systemStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            systemStatus.Name = "systemStatus";
-            systemStatus.Size = new Size(83, 32);
-            systemStatus.Text = "Ready";
             // 
             // CreateTableControl
             // 
@@ -179,7 +158,6 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
-            Controls.Add(StatusStrip1);
             Controls.Add(createTableBtn);
             Controls.Add(tableName);
             Controls.Add(label2);
@@ -188,8 +166,6 @@
             Name = "CreateTableControl";
             Size = new Size(2198, 1147);
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
-            StatusStrip1.ResumeLayout(false);
-            StatusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -201,8 +177,6 @@
         private Label label2;
         private TextBox tableName;
         private Button createTableBtn;
-        private StatusStrip StatusStrip1;
-        private ToolStripStatusLabel systemStatus;
         private DataGridViewTextBoxColumn Column1;
         private DataGridViewComboBoxColumn Column2;
         private DataGridViewComboBoxColumn Column3;

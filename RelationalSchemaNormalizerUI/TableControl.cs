@@ -14,13 +14,11 @@ namespace RelationalSchemaNormalizerUI
         private readonly IDynamicDBService _dynamicDbService;
         private readonly INormalizerService _normalizerService;
         private readonly IAppDBService _appDbService;
-        private readonly DependencyAnalyzer _dependencyAnalyzer;
         private string _databaseName;
         private string textFile;
         private List<string> keyAttributes;
         private TableDetail tableDetail;
         DataTable originalRecords;
-
         public TableControl(IDynamicDBService dynamicDbService, INormalizerService normalizerService, IAppDBService appDBService)
         {
             InitializeComponent();
@@ -28,20 +26,19 @@ namespace RelationalSchemaNormalizerUI
             _dynamicDbService = dynamicDbService;
             _normalizerService = normalizerService;
             _appDbService = appDBService;
-            _dependencyAnalyzer = new DependencyAnalyzer(normalizerService, appDBService);
             _databaseName = "appContextDB";
             textFile = string.Empty;
             keyAttributes = new List<string>();
             tableDetail = null;
             originalRecords = null;
-
-
         }
-        public async void Initialize(string tbName)
+        public async Task Initialize(string tbName)
         {
+            //this line gets called for like three times before throwing the error
             tableName.Text = tbName;
 
             tableDetail = await GetTableDetailAsync(tbName, _databaseName);
+            //
             if (tableDetail == null) return;
 
             originalRecords = await GetOriginalRecordsAsync(tableDetail);
@@ -121,7 +118,7 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     if (!string.IsNullOrEmpty(textFile))
-                    {                        
+                    {
                         UploadFileAndSaveRecordsAsync();
                     }
                 }
@@ -174,12 +171,18 @@ namespace RelationalSchemaNormalizerUI
                 if (!readFile.Status)
                 {
                     ShowStatus($"{readFile.Message}");
+                    return;
                 }
-
+                if(readFile.Data.Rows.Count == 0)
+                {
+                    ShowStatus($"File contains no data");
+                    return;
+                }
                 var saveRecords = await _dynamicDbService.InsertRecordsIntoTable(tableDetail, readFile.Data);
                 if (!saveRecords.Status)
                 {
                     ShowStatus($"{saveRecords.Message}", "Database Error");
+                    return;
                 }
 
                 originalRecords = await GetOriginalRecordsAsync(tableDetail);
@@ -190,6 +193,7 @@ namespace RelationalSchemaNormalizerUI
             catch (Exception ex)
             {
                 ShowStatus($"{ex.Message}", "Database Error");
+                return;
             }
         }
 
@@ -242,15 +246,30 @@ namespace RelationalSchemaNormalizerUI
 
         private async void funcDepenBtn_Click(object sender, EventArgs e)
         {
-            var sb = new StringBuilder();
-            functDepText.Visible = true;
-            functDepText.Text = (await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords)).AnalysisResult;
+            try
+            {
+                var sb = new StringBuilder();
+                if (originalRecords.Rows.Count > 0)
+                {
+                    string analysis = (await _normalizerService.AnalyzeDependencies(sb, tableDetail, originalRecords, _appDbService)).AnalysisResult;
+                    functDepText.Visible = true;
+                    functDepText.Text = analysis;
 
-            tableDetail.Comments = functDepText.Text.Trim();
-            _appDbService.UpdateTable(tableDetail);
-            //TODO: display necessary buttons
-            verifyNormalizationBtn.Visible = true;
-            funcDepenBtn.Visible = false;
+                    tableDetail.Comments = functDepText.Text.Trim();
+                    _appDbService.UpdateTable(tableDetail);
+                    //TODO: display necessary buttons
+                    verifyNormalizationBtn.Visible = true;
+                    funcDepenBtn.Visible = false;
+                }
+                else
+                {
+                    ShowStatus("No data in this table");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatus(ex.Message);
+            }
         }
 
         private async void populatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
@@ -402,12 +421,15 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     var outputs = await HandleNormalization(alert);
-                    if (outputs.status)
+
+                    if (!outputs.status)
                     {
-                        twoNFBtn.Visible = true;
-                        threeNFBtn.Visible = true;
-                        verifyNormalizationBtn.Visible = false;
+                        return;
                     }
+
+                    twoNFBtn.Visible = true;
+                    threeNFBtn.Visible = true;
+                    verifyNormalizationBtn.Visible = false;
                 }
             }
             while (result != DialogResult.Cancel);
@@ -416,7 +438,7 @@ namespace RelationalSchemaNormalizerUI
         private async Task<(List<NormalizedTablesInputs> DBDetailsFor2NFCreation, List<GeneratedTable> gen2NFTableList, List<NormalizedTablesInputs> DBDetailsFor3NFCreation, List<GeneratedTable> gen3NFTableList, bool status)> HandleNormalization(ConfirmationAlert alert)
         {
             var sb = new StringBuilder();
-            var analysisResult = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords, true);
+            var analysisResult = await _normalizerService.AnalyzeDependencies(sb, tableDetail, originalRecords, _appDbService, true);
 
             if (analysisResult != null)
             {
@@ -771,7 +793,7 @@ namespace RelationalSchemaNormalizerUI
             tableLayoutPanel2.Controls.Clear();
             tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
             tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
-            
+
             recordsFromDB.DataSource = originalRecords;
             recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
 

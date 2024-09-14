@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Services;
+using System;
 using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 
 namespace RelationalSchemaNormalizerUI
@@ -48,8 +49,15 @@ namespace RelationalSchemaNormalizerUI
                     services.AddTransient<IDynamicDBService, DynamicDBService>();
                     services.AddTransient<INormalizerService, NormalizerService>();
                     services.AddDbContext<AppContext>(options =>
-                options.UseSqlServer(context.Configuration.GetConnectionString("AppDatabase"), b => b.MigrationsAssembly("RelationalSchemaNormalizerUI")));
-
+                    options.UseSqlServer(
+                        context.Configuration.GetConnectionString("AppDatabase"),
+                        sqlServerOptions =>
+                        {
+                            sqlServerOptions.MigrationsAssembly("RelationalSchemaNormalizerUI");
+                        }
+                    ),
+                    ServiceLifetime.Transient // Ensure the DbContext is transient
+                );
                 });
         }
         private static void EnsureDatabaseDetailExists(AppContext dbContext)

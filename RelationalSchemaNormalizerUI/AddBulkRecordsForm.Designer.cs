@@ -38,31 +38,31 @@
             // 
             label1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            label1.Location = new Point(12, 86);
+            label1.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            label1.Location = new Point(24, 32);
             label1.Name = "label1";
-            label1.Size = new Size(180, 32);
+            label1.Size = new Size(209, 38);
             label1.TabIndex = 0;
             label1.Text = "Select *csv File";
             // 
             // fileInput
             // 
             fileInput.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            fileInput.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            fileInput.Location = new Point(226, 86);
+            fileInput.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            fileInput.Location = new Point(70, 88);
             fileInput.Name = "fileInput";
             fileInput.ReadOnly = true;
-            fileInput.Size = new Size(550, 39);
+            fileInput.Size = new Size(716, 45);
             fileInput.TabIndex = 1;
             // 
             // addRecords
             // 
             addRecords.BackColor = Color.CornflowerBlue;
             addRecords.DialogResult = DialogResult.Yes;
-            addRecords.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            addRecords.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             addRecords.Location = new Point(348, 169);
             addRecords.Name = "addRecords";
-            addRecords.Size = new Size(249, 44);
+            addRecords.Size = new Size(249, 56);
             addRecords.TabIndex = 2;
             addRecords.Text = "Upload records";
             addRecords.UseVisualStyleBackColor = false;
@@ -71,10 +71,10 @@
             // 
             closeModalBtn.BackColor = Color.Red;
             closeModalBtn.DialogResult = DialogResult.Cancel;
-            closeModalBtn.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            closeModalBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             closeModalBtn.Location = new Point(652, 173);
             closeModalBtn.Name = "closeModalBtn";
-            closeModalBtn.Size = new Size(124, 40);
+            closeModalBtn.Size = new Size(124, 52);
             closeModalBtn.TabIndex = 3;
             closeModalBtn.Text = "Close";
             closeModalBtn.UseVisualStyleBackColor = false;

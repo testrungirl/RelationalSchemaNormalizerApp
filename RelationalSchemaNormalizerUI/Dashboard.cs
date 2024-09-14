@@ -14,7 +14,6 @@ namespace RelationalSchemaNormalizerUI
             _dynamicDBService = dynamicDBService;
             _normalizerService = normalizerService;
         }
-
         private void homeBtn_Click(object sender, EventArgs e)
         {
             createTableControl1.Hide();
