@@ -39,6 +39,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                    .Include(x => x.DatabaseDetail)
                 .Include(td => td.AttributeDetails)
                 .Include(td => td.GeneratedTables)
+                .ThenInclude(x => x.GenTableAttributeDetails)
                    .FirstOrDefaultAsync(td => td.TableName == TableName && td.DatabaseDetail.DataBaseName == DatabaseName);
                 if (tableDetails == null)
                 {

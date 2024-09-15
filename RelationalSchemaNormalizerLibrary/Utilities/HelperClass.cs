@@ -9,18 +9,23 @@ namespace RelationalSchemaNormalizerLibrary.Utilities
             return dataType.ToLower() switch
             {
                 "string" => value,
-                "boolean" => bool.TryParse(value, out var boolValue) ? boolValue : throw new ArgumentException($"Invalid boolean value: {value}"),
+                "boolean" or "bool" => bool.TryParse(value, out var boolValue) ? boolValue : throw new ArgumentException($"Invalid boolean value: {value}"),
                 "char" => char.TryParse(value, out var charValue) ? charValue : throw new ArgumentException($"Invalid char value: {value}"),
                 "datetime" => DateTime.TryParse(value, out var dateTimeValue)
-                        ? (object)dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss")// Convert to SQL Server compatible format
+                        ? (object)dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss") // Convert to SQL Server compatible format
                         : throw new ArgumentException($"Invalid date value: {value}"),
                 "double" => double.TryParse(value, out var doubleValue) ? doubleValue : throw new ArgumentException($"Invalid double value: {value}"),
-                "float" => float.TryParse(value, out var floatValue) ? floatValue : throw new ArgumentException($"Invalid float value: {value}"),
-                "guid" => Guid.TryParse(value, out var guidValue) ? guidValue : throw new ArgumentException($"Invalid GUID value: {value}"),
+                "float" or "single" => float.TryParse(value, out var floatValue) ? floatValue : throw new ArgumentException($"Invalid float value: {value}"),
+                "guid" or "uuid" => Guid.TryParse(value, out var guidValue) ? guidValue : throw new ArgumentException($"Invalid GUID value: {value}"),
                 "int" or "int32" or "int64" => int.TryParse(value, out var intValue) ? intValue : throw new ArgumentException($"Invalid integer value: {value}"),
-                "decimal" => decimal.TryParse(value, out var decimalValue) ? decimalValue : throw new ArgumentException($"Invalid decimal value: {value}"),
+
+                // Handle both "decimal", "numeric", and "dec"
+                "decimal" or "numeric" or "dec" => decimal.TryParse(value, out var decimalValue) ? decimalValue : throw new ArgumentException($"Invalid decimal value: {value}"),
+
                 _ => throw new ArgumentException($"Unsupported data type: {dataType}")
             };
+
+
         }
 
         public static List<string> GetKeyAttributes(List<AttributeDetail> attributes)

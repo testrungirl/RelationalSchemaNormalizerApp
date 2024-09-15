@@ -3,8 +3,10 @@ using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Services;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using Svg;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text;
+using System.Windows.Forms;
 
 namespace RelationalSchemaNormalizerUI
 {
@@ -74,8 +76,7 @@ namespace RelationalSchemaNormalizerUI
                 verifyNormalizationBtn.Visible = false;
             }
 
-
-
+            PopulateForm();
             PopulateAttributes(originalRecords, keyAttributes);
 
         }
@@ -173,7 +174,7 @@ namespace RelationalSchemaNormalizerUI
                     ShowStatus($"{readFile.Message}");
                     return;
                 }
-                if(readFile.Data.Rows.Count == 0)
+                if (readFile.Data.Rows.Count == 0)
                 {
                     ShowStatus($"File contains no data");
                     return;
@@ -309,11 +310,12 @@ namespace RelationalSchemaNormalizerUI
                 Multiline = true,
                 Name = "functDepText",
                 ReadOnly = true,
-                ScrollBars = ScrollBars.Horizontal,
+                ScrollBars = ScrollBars.Both,
                 Size = new Size(384, 827),
                 TabIndex = 5,
                 Text = tableDetail.Comments,
                 Visible = true,
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
 
             Panel scrollablePanel = new Panel
@@ -371,7 +373,8 @@ namespace RelationalSchemaNormalizerUI
                 Text = $"DataGrid {index + 1}",
                 Anchor = AnchorStyles.None,
                 TextAlign = ContentAlignment.MiddleCenter,
-                AutoSize = true
+                AutoSize = true,
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
         }
         private static Label CreateDataGridLabel(string TableName)
@@ -381,12 +384,21 @@ namespace RelationalSchemaNormalizerUI
                 Text = $"{TableName}",
                 Anchor = AnchorStyles.None,
                 TextAlign = ContentAlignment.MiddleCenter,
-                AutoSize = true
+                AutoSize = true,
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
         }
 
         private DataGridView CreateDataGridView(DataTable dataTable, List<string> keyAttributes)
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Control;
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
 
             DataGridView dgv = new DataGridView
             {
@@ -396,11 +408,12 @@ namespace RelationalSchemaNormalizerUI
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
+                ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1,
+                //RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
+                Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold),
                 AutoSize = true,
                 BackgroundColor = SystemColors.ButtonHighlight,
                 GridColor = SystemColors.ButtonFace,
-
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
             };
 
@@ -658,6 +671,12 @@ namespace RelationalSchemaNormalizerUI
         {
             List<newVM> data = new();
             var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+            data.Add(new newVM
+            {
+                dataTable = originalRecords,
+                KeyAttri = keyAttributes,
+                TableName = "Original Table"
+            });
             foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
@@ -681,6 +700,12 @@ namespace RelationalSchemaNormalizerUI
         {
             List<newVM> data = new();
             var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
+            data.Add(new newVM
+            {
+                dataTable = originalRecords,
+                KeyAttri = keyAttributes,
+                TableName = "Original Table"
+            });
             foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
@@ -759,6 +784,13 @@ namespace RelationalSchemaNormalizerUI
 
         private async void orignalTable_Click(object sender, EventArgs e)
         {
+            PopulateForm();
+
+            twoNFBtn.Visible = true;
+            threeNFBtn.Visible = true;           
+        }
+        private async void PopulateForm()
+        {
             DataGridView recordsFromDB = new DataGridView
             {
                 AllowUserToAddRows = false,
@@ -772,6 +804,9 @@ namespace RelationalSchemaNormalizerUI
                 ReadOnly = true,
                 RowHeadersWidth = 62,
                 Size = new Size(1574, 827),
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold),
+                ForeColor = SystemColors.WindowText,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
 
             };
             TextBox dependencyText = new TextBox
@@ -787,7 +822,7 @@ namespace RelationalSchemaNormalizerUI
                 TabIndex = 5,
                 Text = tableDetail.Comments,
                 Visible = true,
-
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
 
             tableLayoutPanel2.Controls.Clear();
@@ -796,10 +831,9 @@ namespace RelationalSchemaNormalizerUI
 
             recordsFromDB.DataSource = originalRecords;
             recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
-
-            twoNFBtn.Visible = true;
-            threeNFBtn.Visible = true;
             orignalTable.Visible = false;
         }
     }
+
+   
 }

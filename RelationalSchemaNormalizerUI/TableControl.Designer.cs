@@ -154,7 +154,7 @@
             // 
             functDepText.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             functDepText.BackColor = SystemColors.GradientInactiveCaption;
-            functDepText.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            functDepText.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
             functDepText.Location = new Point(1583, 3);
             functDepText.Multiline = true;
             functDepText.Name = "functDepText";
@@ -171,7 +171,7 @@
             funcDepenBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             funcDepenBtn.BackColor = Color.CornflowerBlue;
             funcDepenBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            funcDepenBtn.Location = new Point(580, 993);
+            funcDepenBtn.Location = new Point(708, 993);
             funcDepenBtn.Name = "funcDepenBtn";
             funcDepenBtn.Size = new Size(441, 48);
             funcDepenBtn.TabIndex = 4;
@@ -186,11 +186,11 @@
             twoNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             twoNFBtn.BackColor = Color.CornflowerBlue;
             twoNFBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            twoNFBtn.Location = new Point(263, 993);
+            twoNFBtn.Location = new Point(1586, 993);
             twoNFBtn.Name = "twoNFBtn";
-            twoNFBtn.Size = new Size(316, 48);
+            twoNFBtn.Size = new Size(202, 48);
             twoNFBtn.TabIndex = 5;
-            twoNFBtn.Text = "View Tables in 2nd NF";
+            twoNFBtn.Text = "Tables in 2NF";
             twoNFBtn.UseVisualStyleBackColor = false;
             twoNFBtn.Visible = false;
             twoNFBtn.Click += twoNFBtn_Click;
@@ -202,11 +202,11 @@
             threeNFBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             threeNFBtn.BackColor = Color.CornflowerBlue;
             threeNFBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            threeNFBtn.Location = new Point(1564, 993);
+            threeNFBtn.Location = new Point(1794, 993);
             threeNFBtn.Name = "threeNFBtn";
-            threeNFBtn.Size = new Size(318, 48);
+            threeNFBtn.Size = new Size(210, 48);
             threeNFBtn.TabIndex = 6;
-            threeNFBtn.Text = "View Tables in 3rd NF ";
+            threeNFBtn.Text = "Tables in 3NF ";
             threeNFBtn.UseVisualStyleBackColor = false;
             threeNFBtn.Visible = false;
             threeNFBtn.Click += threeNFBtn_Click;
@@ -218,7 +218,7 @@
             verifyNormalizationBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             verifyNormalizationBtn.BackColor = Color.CornflowerBlue;
             verifyNormalizationBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            verifyNormalizationBtn.Location = new Point(1253, 993);
+            verifyNormalizationBtn.Location = new Point(1155, 993);
             verifyNormalizationBtn.Name = "verifyNormalizationBtn";
             verifyNormalizationBtn.Size = new Size(239, 48);
             verifyNormalizationBtn.TabIndex = 7;
@@ -234,7 +234,7 @@
             orignalTable.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             orignalTable.BackColor = Color.CornflowerBlue;
             orignalTable.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            orignalTable.Location = new Point(1052, 993);
+            orignalTable.Location = new Point(1400, 993);
             orignalTable.Name = "orignalTable";
             orignalTable.Size = new Size(180, 48);
             orignalTable.TabIndex = 8;
