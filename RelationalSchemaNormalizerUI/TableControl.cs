@@ -3,8 +3,10 @@ using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Services;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using Svg;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text;
+using System.Windows.Forms;
 
 namespace RelationalSchemaNormalizerUI
 {
@@ -14,13 +16,13 @@ namespace RelationalSchemaNormalizerUI
         private readonly IDynamicDBService _dynamicDbService;
         private readonly INormalizerService _normalizerService;
         private readonly IAppDBService _appDbService;
-        private readonly DependencyAnalyzer _dependencyAnalyzer;
         private string _databaseName;
         private string textFile;
         private List<string> keyAttributes;
         private TableDetail tableDetail;
+        private string imagePath;
         DataTable originalRecords;
-
+        private TextBox dependencyText;
         public TableControl(IDynamicDBService dynamicDbService, INormalizerService normalizerService, IAppDBService appDBService)
         {
             InitializeComponent();
@@ -28,20 +30,19 @@ namespace RelationalSchemaNormalizerUI
             _dynamicDbService = dynamicDbService;
             _normalizerService = normalizerService;
             _appDbService = appDBService;
-            _dependencyAnalyzer = new DependencyAnalyzer(normalizerService, appDBService);
             _databaseName = "appContextDB";
             textFile = string.Empty;
             keyAttributes = new List<string>();
             tableDetail = null;
             originalRecords = null;
-
-
         }
-        public async void Initialize(string tbName)
+        public async Task Initialize(string tbName)
         {
+            //this line gets called for like three times before throwing the error
             tableName.Text = tbName;
 
             tableDetail = await GetTableDetailAsync(tbName, _databaseName);
+            //
             if (tableDetail == null) return;
 
             originalRecords = await GetOriginalRecordsAsync(tableDetail);
@@ -50,9 +51,6 @@ namespace RelationalSchemaNormalizerUI
 
             if (tableDetail?.GeneratedTables?.Count(x => x.LevelOfNF == LevelOfNF.Second) > 0)
             {
-                functDepText.Visible = true;
-                functDepText.Text = tableDetail.Comments;
-
                 funcDepenBtn.Visible = false;
                 threeNFBtn.Visible = true;
                 twoNFBtn.Visible = true;
@@ -64,9 +62,7 @@ namespace RelationalSchemaNormalizerUI
                 funcDepenBtn.Visible = false;
                 threeNFBtn.Visible = false;
                 twoNFBtn.Visible = false;
-                verifyNormalizationBtn.Visible = true;
-                functDepText.Visible = true;
-                functDepText.Text = tableDetail.Comments;
+                verifyNormalizationBtn.Visible = true;            
 
             }
             else if (tableDetail.LevelOfNF == LevelOfNF.NotChecked)
@@ -77,9 +73,18 @@ namespace RelationalSchemaNormalizerUI
                 verifyNormalizationBtn.Visible = false;
             }
 
-
-
+            PopulateForm();
             PopulateAttributes(originalRecords, keyAttributes);
+            if (string.IsNullOrWhiteSpace(tableDetail.Comments))
+            {
+                dependencyText.Visible = false;
+            }
+            else
+            {
+                dependencyText.Visible = true;
+                dependencyText.Text = tableDetail.Comments;
+            }
+
 
         }
         private async Task<TableDetail?> GetTableDetailAsync(string tableName, string databaseName)
@@ -121,7 +126,7 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     if (!string.IsNullOrEmpty(textFile))
-                    {                        
+                    {
                         UploadFileAndSaveRecordsAsync();
                     }
                 }
@@ -174,12 +179,18 @@ namespace RelationalSchemaNormalizerUI
                 if (!readFile.Status)
                 {
                     ShowStatus($"{readFile.Message}");
+                    return;
                 }
-
+                if (readFile.Data.Rows.Count == 0)
+                {
+                    ShowStatus($"File contains no data");
+                    return;
+                }
                 var saveRecords = await _dynamicDbService.InsertRecordsIntoTable(tableDetail, readFile.Data);
                 if (!saveRecords.Status)
                 {
                     ShowStatus($"{saveRecords.Message}", "Database Error");
+                    return;
                 }
 
                 originalRecords = await GetOriginalRecordsAsync(tableDetail);
@@ -190,6 +201,7 @@ namespace RelationalSchemaNormalizerUI
             catch (Exception ex)
             {
                 ShowStatus($"{ex.Message}", "Database Error");
+                return;
             }
         }
 
@@ -242,15 +254,30 @@ namespace RelationalSchemaNormalizerUI
 
         private async void funcDepenBtn_Click(object sender, EventArgs e)
         {
-            var sb = new StringBuilder();
-            functDepText.Visible = true;
-            functDepText.Text = (await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords)).AnalysisResult;
+            try
+            {
+                var sb = new StringBuilder();
+                if (originalRecords.Rows.Count > 0)
+                {
+                    string analysis = (await _normalizerService.AnalyzeDependencies(sb, tableDetail, originalRecords, _appDbService)).AnalysisResult;
+                    dependencyText.Visible = true;
+                    dependencyText.Text = analysis;
 
-            tableDetail.Comments = functDepText.Text.Trim();
-            _appDbService.UpdateTable(tableDetail);
-            //TODO: display necessary buttons
-            verifyNormalizationBtn.Visible = true;
-            funcDepenBtn.Visible = false;
+                    tableDetail.Comments = analysis.Trim();
+                    _appDbService.UpdateTable(tableDetail);
+                    //TODO: display necessary buttons
+                    verifyNormalizationBtn.Visible = true;
+                    funcDepenBtn.Visible = false;
+                }
+                else
+                {
+                    ShowStatus("No data in this table");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatus(ex.Message);
+            }
         }
 
         private async void populatePanelWithTables(List<DataTable> dataTables, List<string> keyAttributes)
@@ -290,11 +317,12 @@ namespace RelationalSchemaNormalizerUI
                 Multiline = true,
                 Name = "functDepText",
                 ReadOnly = true,
-                ScrollBars = ScrollBars.Horizontal,
+                ScrollBars = ScrollBars.Both,
                 Size = new Size(384, 827),
                 TabIndex = 5,
                 Text = tableDetail.Comments,
                 Visible = true,
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
 
             Panel scrollablePanel = new Panel
@@ -352,7 +380,8 @@ namespace RelationalSchemaNormalizerUI
                 Text = $"DataGrid {index + 1}",
                 Anchor = AnchorStyles.None,
                 TextAlign = ContentAlignment.MiddleCenter,
-                AutoSize = true
+                AutoSize = true,
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
         }
         private static Label CreateDataGridLabel(string TableName)
@@ -362,12 +391,21 @@ namespace RelationalSchemaNormalizerUI
                 Text = $"{TableName}",
                 Anchor = AnchorStyles.None,
                 TextAlign = ContentAlignment.MiddleCenter,
-                AutoSize = true
+                AutoSize = true,
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
         }
 
         private DataGridView CreateDataGridView(DataTable dataTable, List<string> keyAttributes)
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Control;
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
 
             DataGridView dgv = new DataGridView
             {
@@ -377,11 +415,12 @@ namespace RelationalSchemaNormalizerUI
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
+                ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1,
+                //RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing,
+                Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold),
                 AutoSize = true,
                 BackgroundColor = SystemColors.ButtonHighlight,
                 GridColor = SystemColors.ButtonFace,
-
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
             };
 
@@ -402,12 +441,16 @@ namespace RelationalSchemaNormalizerUI
                 if (result == DialogResult.Yes)
                 {
                     var outputs = await HandleNormalization(alert);
-                    if (outputs.status)
+
+                    if (!outputs.status)
                     {
-                        twoNFBtn.Visible = true;
-                        threeNFBtn.Visible = true;
-                        verifyNormalizationBtn.Visible = false;
+                        break;
                     }
+
+                    twoNFBtn.Visible = true;
+                    threeNFBtn.Visible = true;
+                    verifyNormalizationBtn.Visible = false;
+                    break;
                 }
             }
             while (result != DialogResult.Cancel);
@@ -416,7 +459,7 @@ namespace RelationalSchemaNormalizerUI
         private async Task<(List<NormalizedTablesInputs> DBDetailsFor2NFCreation, List<GeneratedTable> gen2NFTableList, List<NormalizedTablesInputs> DBDetailsFor3NFCreation, List<GeneratedTable> gen3NFTableList, bool status)> HandleNormalization(ConfirmationAlert alert)
         {
             var sb = new StringBuilder();
-            var analysisResult = await _dependencyAnalyzer.AnalyzeDependencies(sb, tableDetail, originalRecords, true);
+            var analysisResult = await _normalizerService.AnalyzeDependencies(sb, tableDetail, originalRecords, _appDbService, true);
 
             if (analysisResult != null)
             {
@@ -635,8 +678,14 @@ namespace RelationalSchemaNormalizerUI
         private async void threeNFBtn_Click(object sender, EventArgs e)
         {
             List<newVM> data = new();
-            var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
-            foreach (var tableSchema in retrievedSchemaIn2NF)
+            var retrievedSchemaIn3NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+            data.Add(new newVM
+            {
+                dataTable = originalRecords,
+                KeyAttri = keyAttributes,
+                TableName = "Original Table"
+            });
+            foreach (var tableSchema in retrievedSchemaIn3NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
                 if (res != null)
@@ -648,17 +697,25 @@ namespace RelationalSchemaNormalizerUI
                     data.Add(new newVM { dataTable = res, KeyAttri = KeyAttri, TableName = tableSchema.TableName });
                 }
             }
-
+            imagePath = tableDetail.ImgPathFor3NF;
             populatePanelWithTables(data);
             threeNFBtn.Visible = false;
             twoNFBtn.Visible = true;
             orignalTable.Visible = true;
+            btnShowImage.Visible = true;
+
         }
 
         private async void twoNFBtn_Click(object sender, EventArgs e)
         {
             List<newVM> data = new();
             var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
+            data.Add(new newVM
+            {
+                dataTable = originalRecords,
+                KeyAttri = keyAttributes,
+                TableName = "Original Table"
+            });
             foreach (var tableSchema in retrievedSchemaIn2NF)
             {
                 var res = (await _dynamicDbService.RetrieveRecordsFromTable(tableSchema, tableDetail.DatabaseDetail.ConnectionString)).Data;
@@ -672,11 +729,12 @@ namespace RelationalSchemaNormalizerUI
                 }
             }
 
-
+            imagePath = tableDetail.ImgPathFor2NF;
             populatePanelWithTables(data);
             twoNFBtn.Visible = false;
             threeNFBtn.Visible = true;
             orignalTable.Visible = true;
+            btnShowImage.Visible = true;
 
         }
 
@@ -711,9 +769,50 @@ namespace RelationalSchemaNormalizerUI
                 {
                     _dynamicDbService.InsertRecordsIntoTable(data.GeneratedTable, data.DataTable, tableDetail.DatabaseDetail.ConnectionString);
                 }
+                //generate ERD(s)
+                generateERDImage();
             }
         }
+        private async Task<ReturnData<string>> generateERDImage()
+        {
+            try
+            {
+                var retrievedSchemaIn2NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Second).ToList();
+                var retrievedSchemaIn3NF = tableDetail.GeneratedTables.Where(x => x.LevelOfNF == LevelOfNF.Third).ToList();
+                if (retrievedSchemaIn2NF.Count > 0)
+                {
 
+                    var DownloadImageRes = await _dynamicDbService.GenerateImageAsync(retrievedSchemaIn2NF.Select(x => x.TableName).ToList(), tableDetail.DatabaseDetail.ConnectionString);
+                    if (DownloadImageRes.Status)
+                    {
+                        tableDetail.ImgPathFor2NF = DownloadImageRes.Data;
+                        await _appDbService.UpdateTable(tableDetail);
+
+                    }
+
+                }
+                if (retrievedSchemaIn2NF.Count > 0)
+                {
+                    var DownloadImageRes1 = await _dynamicDbService.GenerateImageAsync(retrievedSchemaIn3NF.Select(x => x.TableName).ToList(), tableDetail.DatabaseDetail.ConnectionString);
+                    if (DownloadImageRes1.Status)
+                    {
+                        tableDetail.ImgPathFor3NF= DownloadImageRes1.Data;
+                        await _appDbService.UpdateTable(tableDetail);
+
+                    }
+                }
+                return new ReturnData<string>
+                {
+                    Status = true,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ReturnData<string> { Message = $"Image generation error: {ex.Message}" };
+
+            }
+
+        }
         private async Task CreateTable(GeneratedTable generatedTable, string conn, List<ForeignKeyDetail> foreignKeyDetails = null, List<ForeignKeyDetail> primaryKeys = null)
         {
             var createResult = await _dynamicDbService.CreateDatabaseSchema(generatedTable, foreignKeyDetails, conn);
@@ -737,6 +836,13 @@ namespace RelationalSchemaNormalizerUI
 
         private async void orignalTable_Click(object sender, EventArgs e)
         {
+            PopulateForm();
+
+            twoNFBtn.Visible = true;
+            threeNFBtn.Visible = true;
+        }
+        private async void PopulateForm()
+        {
             DataGridView recordsFromDB = new DataGridView
             {
                 AllowUserToAddRows = false,
@@ -750,9 +856,12 @@ namespace RelationalSchemaNormalizerUI
                 ReadOnly = true,
                 RowHeadersWidth = 62,
                 Size = new Size(1574, 827),
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold),
+                ForeColor = SystemColors.WindowText,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
 
             };
-            TextBox dependencyText = new TextBox
+            dependencyText = new TextBox
             {
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
                 BackColor = SystemColors.GradientInactiveCaption,
@@ -763,21 +872,47 @@ namespace RelationalSchemaNormalizerUI
                 ScrollBars = ScrollBars.Horizontal,
                 Size = new Size(384, 827),
                 TabIndex = 5,
-                Text = tableDetail.Comments,
-                Visible = true,
-
+                Text = tableDetail.Comments,                
+                Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point, 0),
             };
 
             tableLayoutPanel2.Controls.Clear();
             tableLayoutPanel2.Controls.Add(dependencyText, 1, 0);
             tableLayoutPanel2.Controls.Add(recordsFromDB, 0, 0);
-            
+
             recordsFromDB.DataSource = originalRecords;
             recordsFromDB.CellPainting += (s, e) => DataGridView_CellPainting(s, e, recordsFromDB, keyAttributes);
-
-            twoNFBtn.Visible = true;
-            threeNFBtn.Visible = true;
             orignalTable.Visible = false;
+            btnShowImage.Visible = false;
+        }
+
+        private void btnShowImage_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (System.IO.File.Exists(imagePath))
+                {
+                    using (Image img = Image.FromFile(imagePath))
+                    {
+                        // Create a new instance of the image display form
+                        using (var imageForm = new ImageDisplayForm(img))
+                        {
+                            // Show the form as a dialog
+                            imageForm.ShowDialog(this);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Image file not found!");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}");
+            }
         }
     }
+
+
 }

@@ -204,7 +204,82 @@ namespace RelationalSchemaNormalizerLibrary.DBContext
             }
             return returnData;
         }
+        public async Task<ReturnData<List<TableColumn>>> GetTableStructureAsync(List<string> tableNames)
+        {
+            var returnData = new ReturnData<List<TableColumn>>();
+            using (var conn = this.Database.GetDbConnection())
+            {
+                try
+                {
+                    conn.Open();
+                    var tableNamesString = string.Join(",", tableNames.Select(t => $"'{t}'"));
+                    var query = $@"
+                SELECT 
+                    c.TABLE_NAME, 
+                    c.COLUMN_NAME, 
+                    c.DATA_TYPE, 
+                    c.CHARACTER_MAXIMUM_LENGTH, 
+                    c.IS_NULLABLE,
+                    CASE WHEN tc.CONSTRAINT_TYPE = 'PRIMARY KEY' THEN 1 ELSE 0 END AS IsPrimaryKey,
+                    CASE WHEN tc.CONSTRAINT_TYPE = 'FOREIGN KEY' THEN 1 ELSE 0 END AS IsForeignKey,
+                    fkcu.TABLE_NAME AS ForeignKeyTable,
+                    fkcu.COLUMN_NAME AS ForeignKeyColumn
+                FROM 
+                    INFORMATION_SCHEMA.COLUMNS c
+                LEFT JOIN 
+                    INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu 
+                    ON c.TABLE_NAME = kcu.TABLE_NAME 
+                    AND c.COLUMN_NAME = kcu.COLUMN_NAME
+                LEFT JOIN 
+                    INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc 
+                    ON kcu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+                LEFT JOIN 
+                    INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+                    ON kcu.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+                LEFT JOIN 
+                    INFORMATION_SCHEMA.KEY_COLUMN_USAGE fkcu
+                    ON rc.UNIQUE_CONSTRAINT_NAME = fkcu.CONSTRAINT_NAME
+                WHERE 
+                    c.TABLE_NAME IN ({tableNamesString})
+                ORDER BY 
+                    c.TABLE_NAME, c.COLUMN_NAME";
 
+                    using var cmd = conn.CreateCommand();
+                    cmd.CommandText = query;
+
+                    using var reader = await cmd.ExecuteReaderAsync();
+                    var columns = new List<TableColumn>();
+
+                    while (await reader.ReadAsync())
+                    {
+                        columns.Add(new TableColumn
+                        {
+                            TableName = reader["TABLE_NAME"].ToString(),
+                            ColumnName = reader["COLUMN_NAME"].ToString(),
+                            DataType = reader["DATA_TYPE"].ToString(),
+                            IsPrimaryKey = reader["IsPrimaryKey"].ToString() == "1",
+                            IsForeignKey = reader["IsForeignKey"].ToString() == "1",
+                            ForeignKeyTable = reader["ForeignKeyTable"].ToString(),
+                            ForeignKeyColumn = reader["ForeignKeyColumn"].ToString()
+                        });
+                    }
+
+                    returnData = new ReturnData<List<TableColumn>> { Data = columns, Status = true };
+                }
+                catch (Exception ex)
+                {
+                    returnData = new ReturnData<List<TableColumn>> { Data = null, Message = $"Error with retrieving data: {ex.Message}", Status = false };
+                }
+                finally
+                {
+                    if (conn.State == ConnectionState.Open)
+                    {
+                        conn.Close();
+                    }
+                }
+                return returnData;
+            }
+        }
 
         public ReturnData<bool> InsertDataIntoTable(DataTable dataTable, string tableName)
         {

@@ -8,6 +8,10 @@ namespace RelationalSchemaNormalizerUI
         private readonly IAppDBService _appDBService;
         private readonly IDynamicDBService _dynamicDBService;
         private readonly string _databaseName;
+        public CreateTableControl()
+        {
+            InitializeComponent();
+        }
         public CreateTableControl(IAppDBService appDBService, IDynamicDBService dynamicDBService)
         {
             InitializeComponent();
@@ -118,11 +122,6 @@ namespace RelationalSchemaNormalizerUI
                 }
             }
             return true;
-        }
-        private void SetSystemStatus(string message, System.Drawing.Color color)
-        {
-            systemStatus.Text = message;
-            systemStatus.ForeColor = color;
         }
         private void tableName_Validating(object sender, System.ComponentModel.CancelEventArgs e)
         {

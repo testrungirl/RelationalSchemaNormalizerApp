@@ -13,9 +13,9 @@ namespace RelationalSchemaNormalizerUI
 
             _appDbService = appDbService;
         }
-        public void ShowTableDetails(string tableName)
+        public async Task ShowTableDetails(string tableName)
         {
-            tableControl1.Initialize(tableName);
+            await tableControl1.Initialize(tableName);
             tableControl1.Visible = true;
             tableControl1.BringToFront();
 

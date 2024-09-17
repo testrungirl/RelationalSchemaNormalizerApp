@@ -16,6 +16,8 @@
         public List<AttributeDetail> AttributeDetails { get; set; } = [];
         public List<GeneratedTable> GeneratedTables { get; set; } = [];
         public LevelOfNF LevelOfNF { get; set; }
+        public string ImgPathFor2NF { get; set; }
+        public string ImgPathFor3NF { get; set; }
 
         public string Comments { get; set; }
     }

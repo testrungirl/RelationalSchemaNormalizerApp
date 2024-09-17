@@ -3,6 +3,7 @@ using RelationalSchemaNormalizerLibrary.Models;
 using RelationalSchemaNormalizerLibrary.Utilities;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using System.Data;
+using System.Text;
 
 namespace RelationalSchemaNormalizerLibrary.Services
 {
@@ -11,6 +12,39 @@ namespace RelationalSchemaNormalizerLibrary.Services
         // non-key attributes fully dependent on a subset of primary keys
         public ReturnData<Dictionary<string, List<string>>> FindPartialDependencies(List<AttributeDetail> attributes, DataTable records, bool includeFullKeySubset = false)
         {
+            if (records is null || records.Rows.Count == 0)
+            {
+                return new ReturnData<Dictionary<string, List<string>>> { Status = false, Message = "No data retrieved from database" };
+            }
+            if (attributes is null || attributes.Count == 0)
+            {
+                return new ReturnData<Dictionary<string, List<string>>> { Status = false, Message = "No identified attribute from application records for this table" };
+            }
+
+            // Check if attribute count matches the column count
+            var columnNames = records.Columns.Cast<DataColumn>().Select(col => col.ColumnName.ToLower()).ToList();
+            var attributeNames = attributes.Select(attr => attr.AttributeName.ToLower()).ToList();
+
+            if (attributeNames.Count != columnNames.Count)
+            {
+                return new ReturnData<Dictionary<string, List<string>>>
+                {
+                    Status = false,
+                    Message = "The number of attributes does not match the number of columns in the DataTable."
+                };
+            }
+
+            // Check if attribute names match the column names (case-insensitive)
+            var unmatchedAttributes = attributeNames.Except(columnNames).ToList();
+            if (unmatchedAttributes.Count > 0)
+            {
+                return new ReturnData<Dictionary<string, List<string>>>
+                {
+                    Status = false,
+                    Message = $"The following attributes do not match with the DataTable columns: {string.Join(", ", unmatchedAttributes)}"
+                };
+            }
+
             var keyAttributes = HelperClass.GetKeyAttributes(attributes);
             var nonKeyAttributes = HelperClass.GetNonKeyAttributes(attributes);
 
@@ -25,17 +59,20 @@ namespace RelationalSchemaNormalizerLibrary.Services
                     dependencies.Add(dependency);
                 }
             }
+
             if (dependencies.Count > 0)
             {
                 uniqueGroups = dependencies
-                .GroupBy(dep => string.Join(", ", dep.KeySubset))
-                .ToDictionary(
-                    group => $"{group.Key}",
-                    group => group.Select(dep => dep.NonKeyAttribute).ToList()
-                );
+                    .GroupBy(dep => string.Join(", ", dep.KeySubset))
+                    .ToDictionary(
+                        group => $"{group.Key}",
+                        group => group.Select(dep => dep.NonKeyAttribute).ToList()
+                    );
             }
+
             return new ReturnData<Dictionary<string, List<string>>> { Data = uniqueGroups, Status = true };
         }
+
         private Dependency FindPartialDependency(string nonKeyAttr, List<string> keyAttributes, DataTable records, bool includeFullKeySubset = false)
         {
             int maxSubset = includeFullKeySubset ? (int)Math.Pow(2, keyAttributes.Count) : (int)Math.Pow(2, keyAttributes.Count) - 1;
@@ -77,29 +114,32 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 )
                 .ToDictionary(group => group.Key, group => group.ToList());
         }
-        public Dictionary<string, List<string>> FindTransitiveDependencies(List<string> nonKeyAttributes, DataTable dataTable)
+        public Dictionary<string, List<string>> FindTransitiveDependencies(Dictionary<string, List<string>> nonKeyAttributesRes, DataTable dataTable)
         {
             var dependencies = new Dictionary<string, List<string>>();
-
-            for (int i = 0; i < nonKeyAttributes.Count; i++)
+            foreach (var key in nonKeyAttributesRes)
             {
-                var A = nonKeyAttributes[i];
-                for (int j = i + 1; j < nonKeyAttributes.Count; j++)
+                List<string> nonKeyAttributes = key.Value;
+                for (int i = 0; i < nonKeyAttributes.Count; i++)
                 {
-                    var B = nonKeyAttributes[j];
-
-                    // Skip if A == B or B already depends on A
-                    if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
-                        continue;
-
-                    // Check if B depends on A and if the pair occurs more than once
-                    if (CheckDependency(A, B, dataTable) && PairOccursMoreThanOnce(A, B, dataTable))
+                    var A = nonKeyAttributes[i];
+                    for (int j = i + 1; j < nonKeyAttributes.Count; j++)
                     {
-                        if (!dependencies.ContainsKey(A))
+                        var B = nonKeyAttributes[j];
+
+                        // Skip if A == B or B already depends on A
+                        if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
+                            continue;
+
+                        // Check if B depends on A and if the pair occurs more than once
+                        if (CheckDependency(A, B, dataTable) && PairOccursMoreThanOnce(A, B, dataTable))
                         {
-                            dependencies[A] = new List<string>();
+                            if (!dependencies.ContainsKey(A))
+                            {
+                                dependencies[A] = new List<string>();
+                            }
+                            dependencies[A].Add(B); // Record dependency
                         }
-                        dependencies[A].Add(B); // Record dependency
                     }
                 }
             }
@@ -165,14 +205,24 @@ namespace RelationalSchemaNormalizerLibrary.Services
         }
         public ReturnData<List<DataTable>> RestructureTableToNormalForm(Dictionary<string, List<string>> dependencies, DataTable records)
         {
-            if (dependencies is null)
+            if (dependencies == null)
             {
-                throw new ArgumentNullException(nameof(dependencies));
+                throw new ArgumentNullException("Dependencies cannot be null.", nameof(dependencies));
             }
-            if (records is null)
+            if (dependencies.Count == 0)
             {
-                throw new ArgumentNullException(nameof(records));
+                throw new ArgumentException("Dependencies cannot be empty.", nameof(dependencies));
             }
+
+            if (records == null)
+            {
+                throw new ArgumentNullException("DataTable cannot be null.", nameof(records));
+            }
+            if (records.Rows.Count == 0)
+            {
+                throw new ArgumentException("DataTable cannot be empty.", nameof(records));
+            }
+
             var dataTables = new List<DataTable>();
 
             foreach (var entry in dependencies)
@@ -180,6 +230,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 var primaryKeyAttributes = entry.Key.Split(new[] { ", " }, StringSplitOptions.None).ToList();
                 var dependentAttributes = entry.Value;
                 var newTable = new DataTable();
+
                 foreach (var pk in primaryKeyAttributes)
                 {
                     newTable.Columns.Add(pk, records.Columns[pk].DataType);
@@ -188,6 +239,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 {
                     newTable.Columns.Add(depAttr, records.Columns[depAttr].DataType);
                 }
+
                 var distinctRows = records.AsEnumerable()
                     .GroupBy(row => string.Join("|", primaryKeyAttributes.Select(pk => row[pk].ToString())))
                     .Select(g => g.First())
@@ -200,7 +252,6 @@ namespace RelationalSchemaNormalizerLibrary.Services
                     {
                         newRow[pk] = row[pk];
                     }
-
                     foreach (var depAttr in dependentAttributes)
                     {
                         newRow[depAttr] = row[depAttr];
@@ -210,9 +261,11 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 }
                 dataTables.Add(newTable);
             }
-            return new ReturnData<List<DataTable>> { Data = dataTables, Status = true };
 
+            return new ReturnData<List<DataTable>> { Data = dataTables, Status = true };
         }
+
+
         public Dictionary<string, List<string>> UpdateFunctionalWithTransitiveDependencies(Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> transitiveDependencies)
         {
             var updatedDependencies = new Dictionary<string, List<string>>();
@@ -266,6 +319,269 @@ namespace RelationalSchemaNormalizerLibrary.Services
             }
 
             return updatedDependencies;
+        }
+
+        public async Task<DependencyAnalysisResult> AnalyzeDependencies(StringBuilder sb, TableDetail tableDetail, DataTable originalRecords, IAppDBService appDBService, bool createNormalizedTables = false)
+        {
+            List<NormalFormsData> datatablesIn2NF = new List<NormalFormsData>();
+            List<NormalFormsData> datatablesIn3NF = new List<NormalFormsData>();
+
+
+            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
+            sb.AppendLine();
+            ///this is shown here
+            var functionalDependenciesRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords);
+            if (!functionalDependenciesRes.Status)
+            {
+                throw new Exception(functionalDependenciesRes.Message);
+            }
+            var functionalDependencies = functionalDependenciesRes.Data;
+
+
+            Dictionary<string, List<string>> transitiveDependencies = new();
+
+           
+            foreach (var key in functionalDependencies)
+            {
+                if (key.Value.Count > 1)
+                {
+                    List<DataTable> newTable = (RestructureTableToNormalForm(new Dictionary<string, List<string>> { { key.Key, key.Value } }, originalRecords)).Data;
+                    //Dictionary<string, List<string>> transitiveDependency = FindTransitiveDependencies(new Dictionary<string, List<string>> { { key.Key, key.Value } }, originalRecords);
+                    Dictionary<string, List<string>> transitiveDependency = FindTransitiveDependencies(new Dictionary<string, List<string>> { { key.Key, key.Value } }, newTable.FirstOrDefault());
+                    foreach (var entry in transitiveDependency)
+                    {
+                        if (!transitiveDependencies.ContainsKey(entry.Key))
+                        {
+                            transitiveDependencies.Add(entry.Key, entry.Value);
+                        }
+                        else
+                        {
+                            // Optionally merge the lists if needed
+                            transitiveDependencies[entry.Key].AddRange(entry.Value);
+                        }
+                    }
+                }
+            }
+            var nonKeyAttributeNames = tableDetail.AttributeDetails
+                .Where(attribute => !attribute.KeyAttribute)
+                .OrderBy(x => x.DateCreated)
+                .Select(attribute => attribute.AttributeName)
+                .ToList();
+
+
+
+
+            var allFunctionalDependenciesDatatableRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords, true);
+            if (!allFunctionalDependenciesDatatableRes.Status)
+            {
+                throw new Exception(functionalDependenciesRes.Message);
+            }
+            var allFunctionalDependenciesDatatable = allFunctionalDependenciesDatatableRes.Data;
+
+            LevelOfNF levelOfNF = DetermineNormalForm(sb, functionalDependencies, transitiveDependencies);
+            if (createNormalizedTables)
+            {
+                tableDetail.LevelOfNF = levelOfNF;
+                tableDetail = (await appDBService.UpdateTable(tableDetail)).Data;
+            }
+
+            string analysisResult = await HandleOutputAndRestructuring(sb, tableDetail, originalRecords, functionalDependencies, allFunctionalDependenciesDatatable, transitiveDependencies, datatablesIn2NF, datatablesIn3NF);
+            return new DependencyAnalysisResult
+            {
+                AnalysisResult = analysisResult,
+                TablesIn2NFData = datatablesIn2NF,
+                TablesIn3NFData = datatablesIn3NF
+            };
+        }
+
+        private LevelOfNF DetermineNormalForm(StringBuilder sb, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> transitiveDependencies)
+        {
+            LevelOfNF levelOfNF = LevelOfNF.NotChecked;
+            if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
+                (transitiveDependencies == null || transitiveDependencies.Count == 0))
+            {
+                sb = new StringBuilder();
+                sb.AppendLine("Table is in 3rd Normal Form");
+                levelOfNF = LevelOfNF.Third;
+            }
+            else if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
+                     (transitiveDependencies != null && transitiveDependencies.Count > 0))
+            {
+                sb.AppendLine("Table is in 2nd Normal Form");
+                levelOfNF = LevelOfNF.Second;
+
+            }
+            else if ((functionalDependencies != null && functionalDependencies.Count > 0) &&
+                     (transitiveDependencies != null && transitiveDependencies.Count > 0))
+            {
+                sb.AppendLine("Table is in 1st Normal Form");
+                levelOfNF = LevelOfNF.First;
+            }
+            sb.AppendLine();
+            return levelOfNF;
+        }
+
+        private async Task<string> HandleOutputAndRestructuring(StringBuilder sb, TableDetail tableDetail, DataTable originalRecords,
+            Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, Dictionary<string, List<string>> transitiveDependencies,
+            List<NormalFormsData> datatablesIn2NF, List<NormalFormsData> datatablesIn3NF)
+        {
+            if (functionalDependencies != null && functionalDependencies.Count > 0)
+            {
+                ProcessFunctionalDependencies(sb, functionalDependencies, allFunctionalDependencies, originalRecords, datatablesIn2NF);
+            }
+
+            if (transitiveDependencies != null && transitiveDependencies.Count > 0)
+            {
+                ProcessTransitiveDependencies(sb, transitiveDependencies, functionalDependencies, allFunctionalDependencies, originalRecords, datatablesIn3NF);
+            }
+
+            // Handle database updates and restructuring
+            return sb.ToString();
+        }
+
+        private void ProcessFunctionalDependencies(StringBuilder sb, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, DataTable originalRecords, List<NormalFormsData> datatablesIn2NF)
+        {
+            foreach (var kvp in functionalDependencies)
+            {
+                var key = kvp.Key;
+                var dependentAttributes = kvp.Value;
+                var keyParts = key.Split(',');
+                if (dependentAttributes.Count > 0)
+                {
+                    sb.AppendLine(keyParts.Length > 1
+                        ? $"Partial functional dependency: ({string.Join(", ", keyParts)}) ⟶ {string.Join(", ", dependentAttributes)}"
+                        : $"Partial functional dependency: {key} ⟶ {string.Join(", ", dependentAttributes)}");
+                    sb.AppendLine();
+                }
+            }
+            List<NormalFormsData> normalFormsDataList = new List<NormalFormsData>();
+            if (functionalDependencies != null && functionalDependencies.Count > 0)
+            {
+                List<string> funckeys = new();
+                foreach (var key in allFunctionalDependencies.Keys)
+                {
+                    funckeys.AddRange(key.Split(','));
+                }
+                funckeys = funckeys.Select(k => k.Trim()).Distinct().ToList();
+
+
+                List<DataTable> dataTables = new List<DataTable>();
+                dataTables.AddRange(RestructureTableToNormalForm(allFunctionalDependencies, originalRecords).Data);
+
+                foreach (var dataTable in dataTables)
+                {
+                    List<string> keyAttributes = new List<string>();
+                    List<string> nonKeyAttributes = new List<string>();
+
+                    List<string> columnNames = dataTable.Columns.Cast<DataColumn>()
+                                                       .Select(column => column.ColumnName)
+                                                       .ToList();
+
+                    foreach (var columnName in columnNames)
+                    {
+                        if (funckeys.Contains(columnName))
+                        {
+                            keyAttributes.Add(columnName);
+                        }
+                        else
+                        {
+                            nonKeyAttributes.Add(columnName);
+                        }
+                    }
+
+                    NormalFormsData normalFormData = new NormalFormsData
+                    {
+                        DataTable = dataTable,
+                        KeyAttributes = keyAttributes,
+                        NonKeyAttributes = nonKeyAttributes
+                    };
+
+                    normalFormsDataList.Add(normalFormData);
+                }
+                datatablesIn2NF.Clear();
+                if (normalFormsDataList.Count > 0)
+                {
+                    datatablesIn2NF.AddRange(normalFormsDataList);
+                }
+            }
+        }
+
+        private void ProcessTransitiveDependencies(StringBuilder sb, Dictionary<string, List<string>> transitiveDependencies, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, DataTable originalRecords, List<NormalFormsData> datatablesIn3NF)
+        {
+            List<string> transkeys = new();
+            List<string> initialPkeys = new();
+            foreach (var item in transitiveDependencies)
+            {
+                if (item.Value.Count > 0)
+                {
+                    sb.AppendLine($"Transitive dependency: {item.Key} ⟶ {string.Join(", ", item.Value)}");
+                    transkeys.AddRange(item.Key.Split(","));
+                    sb.AppendLine();
+                }
+            }
+            List<DataTable> dataTables = new List<DataTable>();
+            List<NormalFormsData> normalFormsDataList = new List<NormalFormsData>();
+            if (functionalDependencies != null && functionalDependencies.Count > 0)
+            {
+                var totalFunctionalDependencies = UpdateFunctionalWithTransitiveDependencies(allFunctionalDependencies, transitiveDependencies);
+
+                dataTables.AddRange(RestructureTableToNormalForm(totalFunctionalDependencies, originalRecords).Data);
+
+                foreach (var key in totalFunctionalDependencies.Keys)
+                {
+                    transkeys.AddRange(key.Split(','));
+                }
+                foreach (var key in functionalDependencies.Keys)
+                {
+                    initialPkeys.AddRange(key.Split(','));
+                }
+                transkeys = transkeys.Select(k => k.Trim()).Distinct().ToList();
+                initialPkeys = initialPkeys.Select(k => k.Trim()).Distinct().ToList();
+            }
+            else
+            {
+                dataTables.AddRange(RestructureTableToNormalForm(transitiveDependencies, originalRecords).Data);
+            }
+            foreach (var dataTable in dataTables)
+            {
+                List<string> keyAttributes = new List<string>();
+                List<string> nonKeyAttributes = new List<string>();
+
+                List<string> columnNames = dataTable.Columns.Cast<DataColumn>()
+                                            .Select(column => column.ColumnName)
+                                            .ToList();
+
+                foreach (var columnName in columnNames)
+                {
+                    if (initialPkeys.Contains(columnName))
+                    {
+                        keyAttributes.Add(columnName);
+                    }
+                    else if (transkeys.Contains(columnName) && columnNames.Count == 2)
+                    {
+
+                        keyAttributes.Add(columnName);
+                    }
+                    else
+                    {
+                        nonKeyAttributes.Add(columnName);
+                    }
+                }
+
+                NormalFormsData normalFormData = new NormalFormsData
+                {
+                    DataTable = dataTable,
+                    KeyAttributes = keyAttributes,
+                    NonKeyAttributes = nonKeyAttributes
+                };
+
+                normalFormsDataList.Add(normalFormData);
+            }
+            datatablesIn3NF.Clear();
+            if (normalFormsDataList.Count > 0)
+            {
+                datatablesIn3NF.AddRange(normalFormsDataList);
+            }
         }
 
 

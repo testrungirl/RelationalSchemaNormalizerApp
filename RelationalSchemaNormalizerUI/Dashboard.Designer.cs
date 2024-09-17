@@ -57,9 +57,10 @@ namespace RelationalSchemaNormalizerUI
             createBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             createBtn.Location = new Point(12, 315);
             createBtn.Name = "createBtn";
-            createBtn.Size = new Size(117, 35);
+            createBtn.Size = new Size(71, 35);
             createBtn.TabIndex = 2;
-            createBtn.Text = "Create Table";
+            createBtn.Text = "Table";
+            createBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             createBtn.UseVisualStyleBackColor = true;
             createBtn.Click += createBtn_Click;
             // 
@@ -68,8 +69,9 @@ namespace RelationalSchemaNormalizerUI
             homeBtn.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             homeBtn.AutoSize = true;
             homeBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            homeBtn.Location = new Point(30, 255);
+            homeBtn.Location = new Point(12, 255);
             homeBtn.Name = "homeBtn";
+            homeBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             homeBtn.Size = new Size(71, 35);
             homeBtn.TabIndex = 1;
             homeBtn.Text = "Home";
