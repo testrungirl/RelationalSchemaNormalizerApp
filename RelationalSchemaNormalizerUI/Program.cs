@@ -23,7 +23,7 @@ namespace RelationalSchemaNormalizerUI
             ServiceProvider = host.Services;
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
             // Automatically apply migrations and update the database
             using (var scope = host.Services.CreateScope())
             {

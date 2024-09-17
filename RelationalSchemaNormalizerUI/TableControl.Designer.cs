@@ -42,6 +42,7 @@
             threeNFBtn = new Button();
             verifyNormalizationBtn = new Button();
             orignalTable = new Button();
+            btnShowImage = new Button();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)recordsFromDB).BeginInit();
             tableLayoutPanel2.SuspendLayout();
@@ -243,6 +244,22 @@
             orignalTable.Visible = false;
             orignalTable.Click += orignalTable_Click;
             // 
+            // btnShowImage
+            // 
+            btnShowImage.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnShowImage.AutoSize = true;
+            btnShowImage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnShowImage.BackColor = Color.CornflowerBlue;
+            btnShowImage.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnShowImage.Location = new Point(1230, 993);
+            btnShowImage.Name = "btnShowImage";
+            btnShowImage.Size = new Size(153, 48);
+            btnShowImage.TabIndex = 9;
+            btnShowImage.Text = "View ERD";
+            btnShowImage.UseVisualStyleBackColor = false;
+            btnShowImage.Visible = false;
+            btnShowImage.Click += btnShowImage_Click;
+            // 
             // TableControl
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -250,6 +267,7 @@
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
+            Controls.Add(btnShowImage);
             Controls.Add(orignalTable);
             Controls.Add(verifyNormalizationBtn);
             Controls.Add(threeNFBtn);
@@ -281,5 +299,6 @@
         private TextBox functDepText;
         private Button verifyNormalizationBtn;
         private Button orignalTable;
+        private Button btnShowImage;
     }
 }

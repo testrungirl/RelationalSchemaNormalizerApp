@@ -39,9 +39,9 @@
             label1.Font = new Font("Segoe UI Black", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label1.Location = new Point(39, 44);
             label1.Name = "label1";
-            label1.Size = new Size(559, 32);
+            label1.Size = new Size(668, 38);
             label1.TabIndex = 0;
-            label1.Text = "Are you sure you want to normalize this table?";
+            label1.Text = "Normalize this table?";
             // 
             // yesBtn
             // 
@@ -71,7 +71,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(637, 191);
+            ClientSize = new Size(815, 191);
             Controls.Add(noBtn);
             Controls.Add(yesBtn);
             Controls.Add(label1);

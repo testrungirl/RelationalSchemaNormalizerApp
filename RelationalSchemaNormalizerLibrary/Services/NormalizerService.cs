@@ -400,6 +400,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
             if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
                 (transitiveDependencies == null || transitiveDependencies.Count == 0))
             {
+                sb = new StringBuilder();
                 sb.AppendLine("Table is in 3rd Normal Form");
                 levelOfNF = LevelOfNF.Third;
             }
@@ -445,11 +446,13 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 var key = kvp.Key;
                 var dependentAttributes = kvp.Value;
                 var keyParts = key.Split(',');
-
-                sb.AppendLine(keyParts.Length > 1
-                    ? $"Partial functional dependency: ({string.Join(", ", keyParts)}) ⟶ {string.Join(", ", dependentAttributes)}"
-                    : $"Partial functional dependency: {key} ⟶ {string.Join(", ", dependentAttributes)}");
-                sb.AppendLine();
+                if (dependentAttributes.Count > 0)
+                {
+                    sb.AppendLine(keyParts.Length > 1
+                        ? $"Partial functional dependency: ({string.Join(", ", keyParts)}) ⟶ {string.Join(", ", dependentAttributes)}"
+                        : $"Partial functional dependency: {key} ⟶ {string.Join(", ", dependentAttributes)}");
+                    sb.AppendLine();
+                }
             }
             List<NormalFormsData> normalFormsDataList = new List<NormalFormsData>();
             if (functionalDependencies != null && functionalDependencies.Count > 0)
@@ -509,9 +512,12 @@ namespace RelationalSchemaNormalizerLibrary.Services
             List<string> initialPkeys = new();
             foreach (var item in transitiveDependencies)
             {
-                sb.AppendLine($"Transitive dependency: {item.Key} ⟶ {string.Join(", ", item.Value)}");
-                transkeys.AddRange(item.Key.Split(","));
-                sb.AppendLine();
+                if (item.Value.Count > 0)
+                {
+                    sb.AppendLine($"Transitive dependency: {item.Key} ⟶ {string.Join(", ", item.Value)}");
+                    transkeys.AddRange(item.Key.Split(","));
+                    sb.AppendLine();
+                }
             }
             List<DataTable> dataTables = new List<DataTable>();
             List<NormalFormsData> normalFormsDataList = new List<NormalFormsData>();

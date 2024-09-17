@@ -18,5 +18,6 @@ namespace RelationalSchemaNormalizerLibrary.Interfaces
         Task<ReturnData<bool>> CreateDatabaseSchema(GeneratedTable tableInNewNF, List<ForeignKeyDetail> foreignKeyDetails, string connectionString);
         Task<ReturnData<bool>> InsertRecordsIntoTable(GeneratedTable generatedTable, DataTable dataTable, string conn);
         Task<ReturnData<DataTable>> RetrieveRecordsFromTable(GeneratedTable tableDetails, string conn);
+        Task<ReturnData<string>> GenerateImageAsync(List<string> tableNames, string conn);
     }
 }

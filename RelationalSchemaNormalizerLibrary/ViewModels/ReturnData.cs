@@ -38,4 +38,14 @@ namespace RelationalSchemaNormalizerLibrary.ViewModels
         public GeneratedTable GeneratedTable { get; set; }
         public List<ForeignKeyDetail> ForeignKeysDetails { get; set; }
     }
+    public class TableColumn
+    {
+        public string TableName { get; set; }
+        public string ColumnName { get; set; }
+        public string DataType { get; set; }
+        public bool IsPrimaryKey { get; set; }
+        public bool IsForeignKey { get; set; }
+        public string ForeignKeyTable { get; set; }
+        public string ForeignKeyColumn { get; set; }
+    }
 }
