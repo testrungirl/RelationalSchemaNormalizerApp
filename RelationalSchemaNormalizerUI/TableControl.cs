@@ -1,13 +1,10 @@
 ﻿using RelationalSchemaNormalizerLibrary.Interfaces;
 using RelationalSchemaNormalizerLibrary.Models;
-using RelationalSchemaNormalizerLibrary.Services;
 using RelationalSchemaNormalizerLibrary.Utilities;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using Svg;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text;
-using System.Windows.Forms;
 
 namespace RelationalSchemaNormalizerUI
 {
@@ -952,17 +949,19 @@ namespace RelationalSchemaNormalizerUI
             List<DataTable> dataTables = new();
             string stage = "Second";
 
-            if (threeNFBtn.Visible)
-            {
-                var results = await Get2NFResults();
-                dataTables = results.Select(x => x.dataTable).ToList();
-            }
-            else if (twoNFBtn.Visible)
+            if (twoNFBtn.Visible)
             {
                 var results = await Get2NFResults(LevelOfNF.Third);
                 dataTables = results.Select(x => x.dataTable).ToList();
                 stage = "Third";
             }
+
+            else if (threeNFBtn.Visible || (tableDetail.GeneratedTables.Any(x => x.LevelOfNF == LevelOfNF.Second)))
+            {
+                var results = await Get2NFResults();
+                dataTables = results.Select(x => x.dataTable).ToList();
+            }
+           
             if (dataTables.Count > 2)
             {
                 var dataExportRes = CsvFileOperations.ConvertDataTablesToSingleCsv(dataTables, stage);
