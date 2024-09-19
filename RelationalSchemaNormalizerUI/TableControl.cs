@@ -79,7 +79,7 @@ namespace RelationalSchemaNormalizerUI
                 funcDepenBtn.Visible = true;
                 threeNFBtn.Visible = false;
                 twoNFBtn.Visible = false;
-                commentBtn.Visible =false;
+                commentBtn.Visible = false;
                 verifyNormalizationBtn.Visible = false;
             }
 
@@ -138,6 +138,7 @@ namespace RelationalSchemaNormalizerUI
                     if (!string.IsNullOrEmpty(textFile))
                     {
                         UploadFileAndSaveRecordsAsync();
+                        return;
                     }
                 }
 
@@ -204,8 +205,9 @@ namespace RelationalSchemaNormalizerUI
                 }
 
                 originalRecords = await GetOriginalRecordsAsync(tableDetail);
-
+                PopulateForm();
                 PopulateAttributes(originalRecords, keyAttributes);
+
                 ShowStatus("Records added successfully!", "Success", MessageBoxIcon.Information);
             }
             catch (Exception ex)
@@ -489,7 +491,7 @@ namespace RelationalSchemaNormalizerUI
                     gen2NFTableList = await GenerateNormalizedTables(analysisResult.TablesIn2NFData, LevelOfNF.Second, tableDetail);
                     DBDetailsFor2NFCreation = await CreateNormalizedTablesInputs(gen2NFTableList, analysisResult.TablesIn2NFData, LevelOfNF.Second);
 
-                    await HandleNFTableCreationAsync(DBDetailsFor2NFCreation);
+                    await HandleNFTableCreationAsync(DBDetailsFor2NFCreation, LevelOfNF.Second);
                 }
                 if (analysisResult.TablesIn3NFData.Count > 0)
                 {
@@ -500,7 +502,7 @@ namespace RelationalSchemaNormalizerUI
 
                 }
                 await Task.Delay(15000);
-                ShowStatus("Tables have been created successfully!!", "Success", MessageBoxIcon.Information);
+                ShowStatus("Table has been decomposed!!", "Success", MessageBoxIcon.Information);
                 return (DBDetailsFor2NFCreation, gen2NFTableList, DBDetailsFor3NFCreation, gen3NFTableList, true);
 
             }
@@ -758,7 +760,7 @@ namespace RelationalSchemaNormalizerUI
 
         }
 
-        private async Task HandleNFTableCreationAsync(List<NormalizedTablesInputs> NormalizedTablesInputs, LevelOfNF levelOfNF = LevelOfNF.Second)
+        private async Task HandleNFTableCreationAsync(List<NormalizedTablesInputs> NormalizedTablesInputs, LevelOfNF levelOfNF)
         {
             if (NormalizedTablesInputs.Count > 0)
             {
@@ -804,7 +806,16 @@ namespace RelationalSchemaNormalizerUI
                     var DownloadImageRes = await _dynamicDbService.GenerateImageAsync(retrievedSchema.Select(x => x.TableName).ToList(), tableDetail.DatabaseDetail.ConnectionString);
                     if (DownloadImageRes.Status)
                     {
-                        tableDetail.ImgPathFor2NF = DownloadImageRes.Data;
+                        if (levelOfNF == LevelOfNF.Third)
+                        {
+
+                            tableDetail.ImgPathFor3NF = DownloadImageRes.Data;
+                        }
+                        else if (levelOfNF == LevelOfNF.Second)
+                        {
+
+                            tableDetail.ImgPathFor2NF = DownloadImageRes.Data;
+                        }
                         await _appDbService.UpdateTable(tableDetail);
 
                     }
@@ -841,7 +852,7 @@ namespace RelationalSchemaNormalizerUI
         private async void orignalTable_Click(object sender, EventArgs e)
         {
             PopulateForm();
-            if(tableDetail.GeneratedTables.Any(x=>x.LevelOfNF == LevelOfNF.Second))
+            if (tableDetail.GeneratedTables.Any(x => x.LevelOfNF == LevelOfNF.Second))
             {
                 twoNFBtn.Visible = true;
             }
@@ -905,6 +916,7 @@ namespace RelationalSchemaNormalizerUI
             orignalTable.Visible = false;
             btnShowImage.Visible = false;
             csvBtn.Visible = false;
+            dependencyText.Visible = !string.IsNullOrWhiteSpace(tableDetail.Comments);
             commentBtn.Visible = !string.IsNullOrWhiteSpace(tableDetail.Comments);
         }
 
@@ -956,7 +968,7 @@ namespace RelationalSchemaNormalizerUI
                 var dataExportRes = CsvFileOperations.ConvertDataTablesToSingleCsv(dataTables, stage);
                 if (dataExportRes.Status)
                 {
-                    ShowStatus(dataExportRes.Message, "Successfully", MessageBoxIcon.Information);
+                    ShowStatus(dataExportRes.Message, "Successfully exported", MessageBoxIcon.Information);
                 }
                 else
                 {
@@ -974,7 +986,7 @@ namespace RelationalSchemaNormalizerUI
             var dataExportRes = TextFileOperations.SaveTextFile(tableDetail.Comments, tableDetail.TableName);
             if (dataExportRes.Status)
             {
-                ShowStatus(dataExportRes.Message, "Successfully", MessageBoxIcon.Information);
+                ShowStatus(dataExportRes.Message, "Comment Saved", MessageBoxIcon.Information);
             }
             else
             {

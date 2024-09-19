@@ -82,7 +82,7 @@ namespace RelationalSchemaNormalizerLibrary.Utilities
                 return new ReturnData<bool> { Status = false, Message = directoryResult.Message };
             }
 
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string timestamp = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_{Guid.NewGuid():N}";
             string fileName = $"AnalysisFor_{tableName}_{timestamp}.txt";
             string fullFilePath = Path.Combine(directoryResult.Data, fileName);
 
@@ -100,7 +100,7 @@ namespace RelationalSchemaNormalizerLibrary.Utilities
                 return new ReturnData<bool> { Status = false, Message = directoryResult.Message };
             }
 
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string timestamp = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_{Guid.NewGuid():N}";
             string fileName = $"NF_Results_{ResultAtStageofNF}_{timestamp}.csv";
             string fullFilePath = Path.Combine(directoryResult.Data, fileName);
 

@@ -285,11 +285,11 @@
             commentBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             commentBtn.BackColor = Color.CornflowerBlue;
             commentBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            commentBtn.Location = new Point(708, 993);
+            commentBtn.Location = new Point(730, 993);
             commentBtn.Name = "commentBtn";
-            commentBtn.Size = new Size(298, 48);
+            commentBtn.Size = new Size(276, 48);
             commentBtn.TabIndex = 11;
-            commentBtn.Text = "Download Comment";
+            commentBtn.Text = "Download Analysis";
             commentBtn.UseVisualStyleBackColor = false;
             commentBtn.Visible = false;
             commentBtn.Click += commentBtn_Click;

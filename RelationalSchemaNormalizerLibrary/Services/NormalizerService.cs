@@ -356,7 +356,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
         private void AppendCompositeAttributes(StringBuilder sb, TableDetail tableDetail)
         {
-            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
+            sb.AppendLine($"Composite key: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
             sb.AppendLine();
         }
 
