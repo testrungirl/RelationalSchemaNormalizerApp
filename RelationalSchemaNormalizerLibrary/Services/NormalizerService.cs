@@ -4,6 +4,7 @@ using RelationalSchemaNormalizerLibrary.Utilities;
 using RelationalSchemaNormalizerLibrary.ViewModels;
 using System.Data;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RelationalSchemaNormalizerLibrary.Services
 {
@@ -128,7 +129,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                         var B = nonKeyAttributes[j];
 
                         // Skip if A == B or B already depends on A
-                        if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A)))
+                        if (A == B || (dependencies.ContainsKey(B) && dependencies[B].Contains(A))) //does dependencies ever contain a value here
                             continue;
 
                         // Check if B depends on A and if the pair occurs more than once
@@ -326,72 +327,135 @@ namespace RelationalSchemaNormalizerLibrary.Services
             List<NormalFormsData> datatablesIn2NF = new List<NormalFormsData>();
             List<NormalFormsData> datatablesIn3NF = new List<NormalFormsData>();
 
+            AppendCompositeAttributes(sb, tableDetail);
 
-            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
-            sb.AppendLine();
-            ///this is shown here
-            var functionalDependenciesRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords);
-            if (!functionalDependenciesRes.Status)
-            {
-                throw new Exception(functionalDependenciesRes.Message);
-            }
-            var functionalDependencies = functionalDependenciesRes.Data;
+            var functionalDependencies = GetFunctionalDependencies(tableDetail, originalRecords);
+            var transitiveDependencies = FindAllTransitiveDependencies(functionalDependencies, originalRecords);
 
+            HandleEdgeCases(sb, transitiveDependencies);
 
-            Dictionary<string, List<string>> transitiveDependencies = new();
-
-           
-            foreach (var key in functionalDependencies)
-            {
-                if (key.Value.Count > 1)
-                {
-                    List<DataTable> newTable = (RestructureTableToNormalForm(new Dictionary<string, List<string>> { { key.Key, key.Value } }, originalRecords)).Data;
-                    //Dictionary<string, List<string>> transitiveDependency = FindTransitiveDependencies(new Dictionary<string, List<string>> { { key.Key, key.Value } }, originalRecords);
-                    Dictionary<string, List<string>> transitiveDependency = FindTransitiveDependencies(new Dictionary<string, List<string>> { { key.Key, key.Value } }, newTable.FirstOrDefault());
-                    foreach (var entry in transitiveDependency)
-                    {
-                        if (!transitiveDependencies.ContainsKey(entry.Key))
-                        {
-                            transitiveDependencies.Add(entry.Key, entry.Value);
-                        }
-                        else
-                        {
-                            // Optionally merge the lists if needed
-                            transitiveDependencies[entry.Key].AddRange(entry.Value);
-                        }
-                    }
-                }
-            }
-            var nonKeyAttributeNames = tableDetail.AttributeDetails
-                .Where(attribute => !attribute.KeyAttribute)
-                .OrderBy(x => x.DateCreated)
-                .Select(attribute => attribute.AttributeName)
-                .ToList();
-
-
-
-
-            var allFunctionalDependenciesDatatableRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords, true);
-            if (!allFunctionalDependenciesDatatableRes.Status)
-            {
-                throw new Exception(functionalDependenciesRes.Message);
-            }
-            var allFunctionalDependenciesDatatable = allFunctionalDependenciesDatatableRes.Data;
+            var nonKeyAttributeNames = GetNonKeyAttributeNames(tableDetail);
+            var allFunctionalDependenciesDatatable = GetAllFunctionalDependencies(tableDetail, originalRecords);
 
             LevelOfNF levelOfNF = DetermineNormalForm(sb, functionalDependencies, transitiveDependencies);
+
             if (createNormalizedTables)
             {
-                tableDetail.LevelOfNF = levelOfNF;
-                tableDetail = (await appDBService.UpdateTable(tableDetail)).Data;
+                await UpdateTableNormalForm(tableDetail, levelOfNF, appDBService);
             }
 
             string analysisResult = await HandleOutputAndRestructuring(sb, tableDetail, originalRecords, functionalDependencies, allFunctionalDependenciesDatatable, transitiveDependencies, datatablesIn2NF, datatablesIn3NF);
+
             return new DependencyAnalysisResult
             {
                 AnalysisResult = analysisResult,
                 TablesIn2NFData = datatablesIn2NF,
                 TablesIn3NFData = datatablesIn3NF
             };
+        }
+
+        private void AppendCompositeAttributes(StringBuilder sb, TableDetail tableDetail)
+        {
+            sb.AppendLine($"Composite Attributes: {string.Join(", ", tableDetail.AttributeDetails.Where(x => x.KeyAttribute).Select(x => x.AttributeName.ToString()))}");
+            sb.AppendLine();
+        }
+
+        private Dictionary<string, List<string>> GetFunctionalDependencies(TableDetail tableDetail, DataTable originalRecords)
+        {
+            var functionalDependenciesRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords);
+            if (!functionalDependenciesRes.Status)
+            {
+                throw new Exception(functionalDependenciesRes.Message);
+            }
+            return functionalDependenciesRes.Data;
+        }
+
+        private Dictionary<string, List<string>> FindAllTransitiveDependencies(Dictionary<string, List<string>> functionalDependencies, DataTable originalRecords)
+        {
+            Dictionary<string, List<string>> transitiveDependencies = new();
+            foreach (var key in functionalDependencies)
+            {
+                if (key.Value.Count > 1)
+                {
+                    List<DataTable> newTable = (RestructureTableToNormalForm(new Dictionary<string, List<string>> { { key.Key, key.Value } }, originalRecords)).Data;
+                    Dictionary<string, List<string>> transitiveDependency = FindTransitiveDependencies(new Dictionary<string, List<string>> { { key.Key, key.Value } }, newTable.FirstOrDefault());
+                    MergeDependencies(transitiveDependencies, transitiveDependency);
+                }
+            }
+            return transitiveDependencies;
+        }
+
+        private void MergeDependencies(Dictionary<string, List<string>> target, Dictionary<string, List<string>> source)
+        {
+            foreach (var entry in source)
+            {
+                if (!target.ContainsKey(entry.Key))
+                {
+                    target.Add(entry.Key, entry.Value);
+                }
+                else
+                {
+                    target[entry.Key].AddRange(entry.Value);
+                }
+            }
+        }
+
+        private void HandleEdgeCases(StringBuilder sb, Dictionary<string, List<string>> transitiveDependencies)
+        {
+            if (transitiveDependencies.Count > 0)
+            {
+                var res = FindEdgeCases(transitiveDependencies);
+                if (res.EdgeCases.Count > 0)
+                {
+                    AppendEdgeCases(sb, res);
+                    RemoveEdgeCasesFromDependencies(transitiveDependencies, res.UniqueKeys);
+                }
+            }
+        }
+
+        private void AppendEdgeCases(StringBuilder sb, (List<string> EdgeCases, HashSet<string> UniqueKeys) res)
+        {
+            sb.AppendLine("Edge case:");
+            foreach (var err in res.EdgeCases)
+            {
+                sb.AppendLine(err);
+            }
+            sb.AppendLine();
+            sb.AppendLine("The following tables for these dependents will not be generated:");
+            sb.AppendLine(res.UniqueKeys.Count == 1 ? res.UniqueKeys.First() : string.Join(", ", res.UniqueKeys));
+        }
+
+        private void RemoveEdgeCasesFromDependencies(Dictionary<string, List<string>> transitiveDependencies, HashSet<string> uniqueKeys)
+        {
+            foreach (var key in uniqueKeys)
+            {
+                transitiveDependencies.Remove(key);
+            }
+        }
+
+        private List<string> GetNonKeyAttributeNames(TableDetail tableDetail)
+        {
+            return tableDetail.AttributeDetails
+                .Where(attribute => !attribute.KeyAttribute)
+                .OrderBy(x => x.DateCreated)
+                .Select(attribute => attribute.AttributeName)
+                .ToList();
+        }
+
+        private Dictionary<string, List<string>> GetAllFunctionalDependencies(TableDetail tableDetail, DataTable originalRecords)
+        {
+            var allFunctionalDependenciesDatatableRes = FindPartialDependencies(tableDetail.AttributeDetails.OrderBy(x => x.DateCreated).ToList(), originalRecords, true);
+            if (!allFunctionalDependenciesDatatableRes.Status)
+            {
+                throw new Exception(allFunctionalDependenciesDatatableRes.Message);
+            }
+            return allFunctionalDependenciesDatatableRes.Data;
+        }
+
+        private async Task UpdateTableNormalForm(TableDetail tableDetail, LevelOfNF levelOfNF, IAppDBService appDBService)
+        {
+            tableDetail.LevelOfNF = levelOfNF;
+            tableDetail = (await appDBService.UpdateTable(tableDetail)).Data;
         }
 
         private LevelOfNF DetermineNormalForm(StringBuilder sb, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> transitiveDependencies)
@@ -401,20 +465,20 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 (transitiveDependencies == null || transitiveDependencies.Count == 0))
             {
                 sb = new StringBuilder();
-                sb.AppendLine("Table is in 3rd Normal Form");
+                sb.AppendLine("Table is in 3NF");
                 levelOfNF = LevelOfNF.Third;
             }
             else if ((functionalDependencies == null || functionalDependencies.Count == 0) &&
                      (transitiveDependencies != null && transitiveDependencies.Count > 0))
             {
-                sb.AppendLine("Table is in 2nd Normal Form");
+                sb.AppendLine("Table is in 2NF");
                 levelOfNF = LevelOfNF.Second;
 
             }
             else if ((functionalDependencies != null && functionalDependencies.Count > 0) &&
                      (transitiveDependencies != null && transitiveDependencies.Count > 0))
             {
-                sb.AppendLine("Table is in 1st Normal Form");
+                sb.AppendLine("Table is in 1NF");
                 levelOfNF = LevelOfNF.First;
             }
             sb.AppendLine();
@@ -441,6 +505,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
         private void ProcessFunctionalDependencies(StringBuilder sb, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, DataTable originalRecords, List<NormalFormsData> datatablesIn2NF)
         {
+            sb.AppendLine("Partial functional dependency:");
             foreach (var kvp in functionalDependencies)
             {
                 var key = kvp.Key;
@@ -448,9 +513,10 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 var keyParts = key.Split(',');
                 if (dependentAttributes.Count > 0)
                 {
+
                     sb.AppendLine(keyParts.Length > 1
-                        ? $"Partial functional dependency: ({string.Join(", ", keyParts)}) ⟶ {string.Join(", ", dependentAttributes)}"
-                        : $"Partial functional dependency: {key} ⟶ {string.Join(", ", dependentAttributes)}");
+                        ? $"({string.Join(", ", keyParts)}) ⟶ {string.Join(", ", dependentAttributes)}"
+                        : $"{key} ⟶ {string.Join(", ", dependentAttributes)}");
                     sb.AppendLine();
                 }
             }
@@ -508,13 +574,14 @@ namespace RelationalSchemaNormalizerLibrary.Services
 
         private void ProcessTransitiveDependencies(StringBuilder sb, Dictionary<string, List<string>> transitiveDependencies, Dictionary<string, List<string>> functionalDependencies, Dictionary<string, List<string>> allFunctionalDependencies, DataTable originalRecords, List<NormalFormsData> datatablesIn3NF)
         {
+            sb.AppendLine("Transitive dependency:");
             List<string> transkeys = new();
             List<string> initialPkeys = new();
             foreach (var item in transitiveDependencies)
             {
                 if (item.Value.Count > 0)
                 {
-                    sb.AppendLine($"Transitive dependency: {item.Key} ⟶ {string.Join(", ", item.Value)}");
+                    sb.AppendLine($"{item.Key} ⟶ {string.Join(", ", item.Value)}");
                     transkeys.AddRange(item.Key.Split(","));
                     sb.AppendLine();
                 }
@@ -584,6 +651,37 @@ namespace RelationalSchemaNormalizerLibrary.Services
             }
         }
 
+        private (List<string> EdgeCases, HashSet<string> UniqueKeys) FindEdgeCases(Dictionary<string, List<string>> dependencies)
+        {
+            var edgeCases = new List<string>();
+            var uniqueKeys = new HashSet<string>();
 
+            foreach (var currentDependency in dependencies)
+            {
+                string currentKey = currentDependency.Key;
+                List<string> currentValues = currentDependency.Value;
+
+                foreach (var otherDependency in dependencies)
+                {
+                    if (otherDependency.Key == currentKey)
+                        continue; // Skip comparing a key with itself
+
+                    // Check if the current key is in the other dependency's values
+                    if (otherDependency.Value.Contains(currentKey))
+                    {
+                        string edgeCase = "Nested dependency detected:\n" +
+                                          $"{otherDependency.Key} ⟶ {string.Join(", ", otherDependency.Value)}\n" +
+                                          $"{currentKey} ⟶ {string.Join(", ", currentValues)}\n" +
+                                          "\nThis nesting of dependencies is not handled!.";
+                        edgeCases.Add(edgeCase);
+                        uniqueKeys.Add(otherDependency.Key);
+                        uniqueKeys.Add(currentKey);
+                    }
+                }
+            }
+
+            edgeCases = edgeCases.Distinct().ToList();
+            return (edgeCases, uniqueKeys);
+        }
     }
 }

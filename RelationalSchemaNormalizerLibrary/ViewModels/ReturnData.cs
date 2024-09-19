@@ -48,4 +48,9 @@ namespace RelationalSchemaNormalizerLibrary.ViewModels
         public string ForeignKeyTable { get; set; }
         public string ForeignKeyColumn { get; set; }
     }
+    public class newVM
+    {
+        public DataTable dataTable { get; set; }
+        public List<string> KeyAttri { get; set; }
+    }
 }

@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace RelationalSchemaNormalizerUI.Migrations
 {
     /// <inheritdoc />
-    public partial class DBInit : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,7 +31,10 @@ namespace RelationalSchemaNormalizerUI.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TableName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DatabaseDetailId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    LevelOfNF = table.Column<int>(type: "int", nullable: false),
+                    ImgPathFor2NF = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImgPathFor3NF = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "")
                 },
                 constraints: table =>
                 {
@@ -44,14 +48,35 @@ namespace RelationalSchemaNormalizerUI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AttributeDetails",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AttributeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DataType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    KeyAttribute = table.Column<bool>(type: "bit", nullable: false),
+                    TableDetailId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AttributeDetails", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AttributeDetails_TableDetails_TableDetailId",
+                        column: x => x.TableDetailId,
+                        principalTable: "TableDetails",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "GeneratedTables",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TableName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TableDetailId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Is2ndNF = table.Column<bool>(type: "bit", nullable: false),
-                    Is3rdNF = table.Column<bool>(type: "bit", nullable: false)
+                    LevelOfNF = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -65,36 +90,25 @@ namespace RelationalSchemaNormalizerUI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AttributeDetails",
+                name: "GenTableAttributeDetails",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     AttributeName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DataType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     KeyAttribute = table.Column<bool>(type: "bit", nullable: false),
-                    TableDetailId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    GeneratedTableId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    GeneratedTableId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AttributeDetails", x => x.Id);
+                    table.PrimaryKey("PK_GenTableAttributeDetails", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AttributeDetails_GeneratedTables_GeneratedTableId",
+                        name: "FK_GenTableAttributeDetails_GeneratedTables_GeneratedTableId",
                         column: x => x.GeneratedTableId,
                         principalTable: "GeneratedTables",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_AttributeDetails_TableDetails_TableDetailId",
-                        column: x => x.TableDetailId,
-                        principalTable: "TableDetails",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AttributeDetails_GeneratedTableId",
-                table: "AttributeDetails",
-                column: "GeneratedTableId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AttributeDetails_TableDetailId",
@@ -107,6 +121,11 @@ namespace RelationalSchemaNormalizerUI.Migrations
                 column: "TableDetailId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_GenTableAttributeDetails_GeneratedTableId",
+                table: "GenTableAttributeDetails",
+                column: "GeneratedTableId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TableDetails_DatabaseDetailId",
                 table: "TableDetails",
                 column: "DatabaseDetailId");
@@ -117,6 +136,9 @@ namespace RelationalSchemaNormalizerUI.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AttributeDetails");
+
+            migrationBuilder.DropTable(
+                name: "GenTableAttributeDetails");
 
             migrationBuilder.DropTable(
                 name: "GeneratedTables");

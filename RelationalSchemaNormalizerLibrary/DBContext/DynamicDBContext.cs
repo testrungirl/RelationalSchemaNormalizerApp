@@ -343,7 +343,7 @@ namespace RelationalSchemaNormalizerLibrary.DBContext
 
                     using var reader = cmd.ExecuteReader();
 
-                    var dataTable = new DataTable();
+                    var dataTable = new DataTable(tableName);
                     dataTable.Load(reader);
 
                     returnData = new ReturnData<DataTable> { Data = dataTable, Message = "Records retrieved!", Status = true };

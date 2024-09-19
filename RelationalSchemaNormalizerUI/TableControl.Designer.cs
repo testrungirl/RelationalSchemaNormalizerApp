@@ -43,6 +43,8 @@
             verifyNormalizationBtn = new Button();
             orignalTable = new Button();
             btnShowImage = new Button();
+            csvBtn = new Button();
+            commentBtn = new Button();
             tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)recordsFromDB).BeginInit();
             tableLayoutPanel2.SuspendLayout();
@@ -160,7 +162,7 @@
             functDepText.Multiline = true;
             functDepText.Name = "functDepText";
             functDepText.ReadOnly = true;
-            functDepText.ScrollBars = ScrollBars.Horizontal;
+            functDepText.ScrollBars = ScrollBars.Both;
             functDepText.Size = new Size(384, 827);
             functDepText.TabIndex = 5;
             functDepText.Visible = false;
@@ -251,7 +253,7 @@
             btnShowImage.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             btnShowImage.BackColor = Color.CornflowerBlue;
             btnShowImage.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnShowImage.Location = new Point(1230, 993);
+            btnShowImage.Location = new Point(1241, 993);
             btnShowImage.Name = "btnShowImage";
             btnShowImage.Size = new Size(153, 48);
             btnShowImage.TabIndex = 9;
@@ -260,6 +262,38 @@
             btnShowImage.Visible = false;
             btnShowImage.Click += btnShowImage_Click;
             // 
+            // csvBtn
+            // 
+            csvBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            csvBtn.AutoSize = true;
+            csvBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            csvBtn.BackColor = Color.CornflowerBlue;
+            csvBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            csvBtn.Location = new Point(1012, 993);
+            csvBtn.Name = "csvBtn";
+            csvBtn.Size = new Size(210, 48);
+            csvBtn.TabIndex = 10;
+            csvBtn.Text = "Export to CSV";
+            csvBtn.UseVisualStyleBackColor = false;
+            csvBtn.Visible = false;
+            csvBtn.Click += csvBtn_Click;
+            // 
+            // commentBtn
+            // 
+            commentBtn.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            commentBtn.AutoSize = true;
+            commentBtn.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            commentBtn.BackColor = Color.CornflowerBlue;
+            commentBtn.Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            commentBtn.Location = new Point(708, 993);
+            commentBtn.Name = "commentBtn";
+            commentBtn.Size = new Size(298, 48);
+            commentBtn.TabIndex = 11;
+            commentBtn.Text = "Download Comment";
+            commentBtn.UseVisualStyleBackColor = false;
+            commentBtn.Visible = false;
+            commentBtn.Click += commentBtn_Click;
+            // 
             // TableControl
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -267,6 +301,8 @@
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
             BackColor = SystemColors.ActiveCaption;
+            Controls.Add(commentBtn);
+            Controls.Add(csvBtn);
             Controls.Add(btnShowImage);
             Controls.Add(orignalTable);
             Controls.Add(verifyNormalizationBtn);
@@ -300,5 +336,7 @@
         private Button verifyNormalizationBtn;
         private Button orignalTable;
         private Button btnShowImage;
+        private Button csvBtn;
+        private Button commentBtn;
     }
 }

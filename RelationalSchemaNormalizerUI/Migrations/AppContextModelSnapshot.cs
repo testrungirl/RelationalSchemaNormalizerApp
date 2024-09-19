@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RelationalSchemaNormalizerLibrary.Models;
+using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 
 #nullable disable
 
 namespace RelationalSchemaNormalizerUI.Migrations
 {
-    [DbContext(typeof(RelationalSchemaNormalizerLibrary.Models.AppContext))]
+    [DbContext(typeof(AppContext))]
     partial class AppContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
