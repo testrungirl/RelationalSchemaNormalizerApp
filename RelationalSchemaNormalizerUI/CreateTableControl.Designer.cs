@@ -46,10 +46,10 @@
             // 
             label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 36F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Font = new Font("Segoe UI", 26F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label1.Location = new Point(821, 47);
             label1.Name = "label1";
-            label1.Size = new Size(631, 96);
+            label1.Size = new Size(454, 70);
             label1.TabIndex = 0;
             label1.Text = "Create New Table";
             // 
