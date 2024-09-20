@@ -13,7 +13,7 @@ using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 namespace RelationalSchemaNormalizerUI.Migrations
 {
     [DbContext(typeof(AppContext))]
-    [Migration("20240919094623_InitialCreate")]
+    [Migration("20240920074827_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -141,11 +141,15 @@ namespace RelationalSchemaNormalizerUI.Migrations
 
                     b.Property<string>("ImgPathFor2NF")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("ImgPathFor3NF")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<int>("LevelOfNF")
                         .HasColumnType("int");

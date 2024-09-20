@@ -32,8 +32,8 @@ namespace RelationalSchemaNormalizerUI.Migrations
                     TableName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DatabaseDetailId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     LevelOfNF = table.Column<int>(type: "int", nullable: false),
-                    ImgPathFor2NF = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImgPathFor3NF = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImgPathFor2NF = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: ""),
+                    ImgPathFor3NF = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: ""),
                     Comments = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "")
                 },
                 constraints: table =>
