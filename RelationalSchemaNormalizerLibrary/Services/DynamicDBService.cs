@@ -247,7 +247,7 @@ namespace RelationalSchemaNormalizerLibrary.Services
                 Directory.CreateDirectory(diagramsFolder);
 
                 // Generate a unique filename with a timestamp
-                var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                var timestamp = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_{Guid.NewGuid():N}";
                 var dotFileName = $"ERDiagram_{timestamp}.dot";
                 var imageFileName = $"ERDiagram_{timestamp}.png";
 

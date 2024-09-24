@@ -5,12 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RelationalSchemaNormalizerLibrary.Models;
+using AppContext = RelationalSchemaNormalizerLibrary.Models.AppContext;
 
 #nullable disable
 
 namespace RelationalSchemaNormalizerUI.Migrations
 {
-    [DbContext(typeof(RelationalSchemaNormalizerLibrary.Models.AppContext))]
+    [DbContext(typeof(AppContext))]
     partial class AppContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -137,11 +138,15 @@ namespace RelationalSchemaNormalizerUI.Migrations
 
                     b.Property<string>("ImgPathFor2NF")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("ImgPathFor3NF")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<int>("LevelOfNF")
                         .HasColumnType("int");

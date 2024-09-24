@@ -45,6 +45,12 @@ namespace RelationalSchemaNormalizerLibrary.Models
             modelBuilder.Entity<TableDetail>()
                 .Property(t => t.Comments)
                 .HasDefaultValue(string.Empty);
+            modelBuilder.Entity<TableDetail>()
+               .Property(t => t.ImgPathFor2NF)
+               .HasDefaultValue(string.Empty);
+            modelBuilder.Entity<TableDetail>()
+               .Property(t => t.ImgPathFor3NF)
+               .HasDefaultValue(string.Empty);
         }
     }
 }

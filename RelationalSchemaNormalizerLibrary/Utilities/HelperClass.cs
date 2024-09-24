@@ -1,4 +1,7 @@
 ﻿using RelationalSchemaNormalizerLibrary.Models;
+using RelationalSchemaNormalizerLibrary.ViewModels;
+using System.Data;
+using System.Text;
 
 namespace RelationalSchemaNormalizerLibrary.Utilities
 {
